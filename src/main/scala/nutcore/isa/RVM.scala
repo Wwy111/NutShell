@@ -68,6 +68,15 @@ object RV64MInstr extends HasInstrType with HasNutCoreParameter {
   val table = mulTable ++ (if (HasDiv) divTable else Nil)
 }
 
+object RV32COMInstr extends HasInstrType with HasNutCoreParameter {
+  def SQRSUM  = BitPat("b0000011_?????_?????_000_?????_0110011")
+
+  val comTable = Array(
+    SQRSUM         -> List(InstrR, FuType.comu, COMUOpType.sqrsum)
+  )
+  val table = comTable
+}
+
 object RVMInstr extends HasNutCoreParameter {
-  val table = RV32MInstr.table ++ (if (XLEN == 64) RV64MInstr.table else Nil)
+  val table = RV32MInstr.table ++ (if (XLEN == 64) RV64MInstr.table else Nil) ++ RV32COMInstr.table
 }

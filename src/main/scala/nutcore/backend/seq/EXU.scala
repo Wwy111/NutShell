@@ -83,6 +83,10 @@ class EXU(implicit val p: NutCoreConfig) extends NutCoreModule {
   mou.access(valid = fuValids(FuType.mou), src1 = src1, src2 = src2, func = fuOpType)
   mou.io.cfIn := io.in.bits.cf
   mou.io.out.ready := true.B
+
+  val comu = Module(new COMU)
+  val comuOut = comu.access(valid = fuValids(FuType.comu), src1 = src1, src2 = src2, func = fuOpType)
+  comu.io.out.ready := true.B
   
   io.out.bits.decode := DontCare
   (io.out.bits.decode.ctrl, io.in.bits.ctrl) match { case (o, i) =>
@@ -102,7 +106,8 @@ class EXU(implicit val p: NutCoreConfig) extends NutCoreModule {
   // FIXME: should handle io.out.ready == false
   io.out.valid := io.in.valid && MuxLookup(fuType, true.B, List(
     FuType.lsu -> lsu.io.out.valid,
-    FuType.mdu -> mdu.io.out.valid
+    FuType.mdu -> mdu.io.out.valid,
+    FuType.comu -> comu.io.out.valid
   ))
 
   io.out.bits.commits(FuType.alu) := aluOut
@@ -110,6 +115,7 @@ class EXU(implicit val p: NutCoreConfig) extends NutCoreModule {
   io.out.bits.commits(FuType.csr) := csrOut
   io.out.bits.commits(FuType.mdu) := mduOut
   io.out.bits.commits(FuType.mou) := 0.U
+  io.out.bits.commits(FuType.comu):= comuOut
 
   io.in.ready := !io.in.valid || io.out.fire()
 
