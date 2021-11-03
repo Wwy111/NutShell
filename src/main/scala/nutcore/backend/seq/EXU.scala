@@ -19,7 +19,6 @@ package nutcore
 import chisel3._
 import chisel3.util._
 import chisel3.util.experimental.BoringUtils
-
 import utils._
 import bus.simplebus._
 import top.Settings
@@ -87,6 +86,10 @@ class EXU(implicit val p: NutCoreConfig) extends NutCoreModule {
   val comu = Module(new COMU)
   val comuOut = comu.access(valid = fuValids(FuType.comu), src1 = src1, src2 = src2, func = fuOpType)
   comu.io.out.ready := true.B
+
+  val vecu = Module(new VECU)
+  val vecuOut = vecu.access(valid = fuValids(FuType.vecu), src1 = src1, src2 = src2, func = fuOpType)
+  vecu.io.out.ready := true.B
   
   io.out.bits.decode := DontCare
   (io.out.bits.decode.ctrl, io.in.bits.ctrl) match { case (o, i) =>
@@ -107,7 +110,8 @@ class EXU(implicit val p: NutCoreConfig) extends NutCoreModule {
   io.out.valid := io.in.valid && MuxLookup(fuType, true.B, List(
     FuType.lsu -> lsu.io.out.valid,
     FuType.mdu -> mdu.io.out.valid,
-    FuType.comu -> comu.io.out.valid
+    FuType.comu -> comu.io.out.valid,
+    FuType.vecu -> vecu.io.out.valid
   ))
 
   io.out.bits.commits(FuType.alu) := aluOut
@@ -116,6 +120,7 @@ class EXU(implicit val p: NutCoreConfig) extends NutCoreModule {
   io.out.bits.commits(FuType.mdu) := mduOut
   io.out.bits.commits(FuType.mou) := 0.U
   io.out.bits.commits(FuType.comu):= comuOut
+  io.out.bits.commits(FuType.vecu):= vecuOut
 
   io.in.ready := !io.in.valid || io.out.fire()
 

@@ -23,7 +23,16 @@ import chisel3.util.experimental.BoringUtils
 import utils._
 
 object COMUOpType {
-  def sqrsum = "b000".U
+  def comadd = "b000".U
+  def comsub = "b010".U
+  def commul1 = "b101".U      // A(63,32)B(31,0)+A(31,0)B(63,32)
+  def commul2 = "b111".U      // A(63,32)B(63,32)-A(31,0)B(31,0)
+  def commul3 = "b100".U      // A(63,32)B(63,32)+A(31,0)B(31,0)
+  def commul4 = "b110".U      // A(31,0)B(63,32)-A(63,32)B(31,0)
+
+  def isAdd(op:UInt) = op === comadd
+  def isSub(op:UInt) = op === comsub
+  def isDiff(op:UInt) = op(1)
 }
 
 class COMUIO extends FunctionUnitIO {
@@ -42,17 +51,74 @@ class COMU extends NutCoreModule {
     io.out.bits
   }
 
-  val mul1 = Module(new Multiplier(XLEN))
-  val mul2 = Module(new Multiplier(XLEN))
+  val realA = src1(63, 32)
+  val imageA = src1(31, 0)
+  val realB = src2(63, 32)
+  val imageB = src2(31, 0)
 
-  mul1.io.in.bits(0) := src1
-  mul1.io.in.bits(1) := src1
+  val isComSub = COMUOpType.isDiff(func)
+  val realAdderRes = (realA + (realB ^ Fill(32, isComSub))) + isComSub
+  val imageAdderRes = (imageA + (imageB ^ Fill(32, isComSub))) + isComSub
 
-  mul2.io.in.bits(0) := src2
-  mul2.io.in.bits(1) := src2
+//  val mul1 = Module(new Multiplier(XLEN+1))
+//  val mul2 = Module(new Multiplier(XLEN+1))
+//
+//  mul1.io.in.bits(0) := MuxCase(0.U, Array(
+//    (func === COMUOpType.commul1)       -> ZeroExt(SignExt(realA, XLEN), XLEN+1),
+//    (func === COMUOpType.commul2)       -> ZeroExt(SignExt(realA, XLEN), XLEN+1),
+//    (func === COMUOpType.commul3)       -> ZeroExt(SignExt(realA, XLEN), XLEN+1),
+//    (func === COMUOpType.commul4)       -> ZeroExt(SignExt(imageA, XLEN), XLEN+1)
+//  ))
+//  mul1.io.in.bits(1) := MuxCase(0.U, Array(
+//    (func === COMUOpType.commul1)       -> ZeroExt(SignExt(imageB, XLEN), XLEN+1),
+//    (func === COMUOpType.commul2)       -> ZeroExt(SignExt(realB, XLEN), XLEN+1),
+//    (func === COMUOpType.commul3)       -> ZeroExt(SignExt(realB, XLEN), XLEN+1),
+//    (func === COMUOpType.commul4)       -> ZeroExt(SignExt(realB, XLEN), XLEN+1)
+//  ))
+//
+//  mul2.io.in.bits(0) := MuxCase(0.U, Array(
+//    (func === COMUOpType.commul1)       -> ZeroExt(SignExt(imageA, XLEN), XLEN+1),
+//    (func === COMUOpType.commul2)       -> ZeroExt(SignExt(imageA, XLEN), XLEN+1),
+//    (func === COMUOpType.commul3)       -> ZeroExt(SignExt(imageA, XLEN), XLEN+1),
+//    (func === COMUOpType.commul4)       -> ZeroExt(SignExt(realA, XLEN), XLEN+1)
+//  ))
+//  mul2.io.in.bits(1) := MuxCase(0.U, Array(
+//    (func === COMUOpType.commul1)       -> ZeroExt(SignExt(realB, XLEN), XLEN+1),
+//    (func === COMUOpType.commul2)       -> ZeroExt(SignExt(imageB, XLEN), XLEN+1),
+//    (func === COMUOpType.commul3)       -> ZeroExt(SignExt(imageB, XLEN), XLEN+1),
+//    (func === COMUOpType.commul4)       -> ZeroExt(SignExt(imageB, XLEN), XLEN+1)
+//  ))
+  val mul1 = Module(new Multiplier(33))
+  val mul2 = Module(new Multiplier(33))
 
-  mul1.io.in.valid := io.in.valid
-  mul2.io.in.valid := io.in.valid
+  mul1.io.in.bits(0) := MuxCase(0.U, Array(
+    (func === COMUOpType.commul1)       -> ZeroExt(realA, 33),
+    (func === COMUOpType.commul2)       -> ZeroExt(realA, 33),
+    (func === COMUOpType.commul3)       -> ZeroExt(realA, 33),
+    (func === COMUOpType.commul4)       -> ZeroExt(imageA, 33)
+  ))
+  mul1.io.in.bits(1) := MuxCase(0.U, Array(
+    (func === COMUOpType.commul1)       -> ZeroExt(imageB, 33),
+    (func === COMUOpType.commul2)       -> ZeroExt(realB, 33),
+    (func === COMUOpType.commul3)       -> ZeroExt(realB, 33),
+    (func === COMUOpType.commul4)       -> ZeroExt(realB, 33)
+  ))
+
+  mul2.io.in.bits(0) := MuxCase(0.U, Array(
+    (func === COMUOpType.commul1)       -> ZeroExt(imageA, 33),
+    (func === COMUOpType.commul2)       -> ZeroExt(imageA, 33),
+    (func === COMUOpType.commul3)       -> ZeroExt(imageA, 33),
+    (func === COMUOpType.commul4)       -> ZeroExt(realA, 33)
+  ))
+  mul2.io.in.bits(1) := MuxCase(0.U, Array(
+    (func === COMUOpType.commul1)       -> ZeroExt(realB, 33),
+    (func === COMUOpType.commul2)       -> ZeroExt(imageB, 33),
+    (func === COMUOpType.commul3)       -> ZeroExt(imageB, 33),
+    (func === COMUOpType.commul4)       -> ZeroExt(imageB, 33)
+  ))
+
+  mul1.io.in.valid := valid && func(2).asBool()
+  mul2.io.in.valid := valid && func(2).asBool()
   mul1.io.out.ready := io.out.ready
   mul2.io.out.ready := io.out.ready
   mul1.io.sign <> DontCare
@@ -61,7 +127,9 @@ class COMU extends NutCoreModule {
   val mul1Res = mul1.io.out.bits(XLEN-1, 0)
   val mul2Res = mul2.io.out.bits(XLEN-1, 0)
 
-  io.out.bits := mul1Res + mul2Res
-  io.in.ready := mul1.io.in.ready && mul2.io.in.ready
-  io.out.valid := mul1.io.out.valid && mul2.io.out.valid
+  val mulRes = (mul1Res +& (mul2Res ^ Fill(XLEN, isComSub))) + isComSub
+
+  io.out.bits := Mux(func(2).asBool(), mulRes, (realAdderRes << 32) | imageAdderRes)
+  io.in.ready := Mux(func(2).asBool(), mul1.io.in.ready && mul2.io.in.ready, io.out.ready)
+  io.out.valid := Mux(func(2).asBool(), mul1.io.out.valid && mul2.io.out.valid, valid)
 }

@@ -68,15 +68,44 @@ object RV64MInstr extends HasInstrType with HasNutCoreParameter {
   val table = mulTable ++ (if (HasDiv) divTable else Nil)
 }
 
-object RV32COMInstr extends HasInstrType with HasNutCoreParameter {
-  def SQRSUM  = BitPat("b0000011_?????_?????_000_?????_0110011")
+object RV32ComInstr extends HasInstrType with HasNutCoreParameter {
+  def COMADD  = BitPat("b0000000_?????_?????_000_?????_0001011")
+  def COMSUB  = BitPat("b0100000_?????_?????_000_?????_0001011")
+  def COMMUL1 = BitPat("b0000000_?????_?????_001_?????_0001011")
+  def COMMUL2 = BitPat("b0000000_?????_?????_010_?????_0001011")
+  def COMMUL3 = BitPat("b0000000_?????_?????_011_?????_0001011")
+  def COMMUL4 = BitPat("b0000000_?????_?????_100_?????_0001011")
 
   val comTable = Array(
-    SQRSUM         -> List(InstrR, FuType.comu, COMUOpType.sqrsum)
+    COMADD         -> List(InstrR, FuType.comu, COMUOpType.comadd),
+    COMSUB         -> List(InstrR, FuType.comu, COMUOpType.comsub),
+    COMMUL1        -> List(InstrR, FuType.comu, COMUOpType.commul1),
+    COMMUL2        -> List(InstrR, FuType.comu, COMUOpType.commul2),
+    COMMUL3        -> List(InstrR, FuType.comu, COMUOpType.commul3),
+    COMMUL4        -> List(InstrR, FuType.comu, COMUOpType.commul4)
   )
   val table = comTable
 }
 
+object RV32VecInstr extends HasInstrType with HasNutCoreParameter {
+  def VECADD     = BitPat("b0000000_?????_?????_000_?????_0101011")
+  def VECSUB     = BitPat("b0100000_?????_?????_000_?????_0101011")
+  def SCAMUL_8   = BitPat("b0000000_?????_?????_001_?????_0101011")
+  def SCAMUL_16  = BitPat("b0000000_?????_?????_010_?????_0101011")
+  def DOTPROD_8  = BitPat("b0000000_?????_?????_011_?????_0101011")
+  def DOTPROD_16 = BitPat("b0000000_?????_?????_100_?????_0101011")
+
+  val vecTable = Array(
+    VECADD         -> List(InstrR, FuType.vecu, VECUOpType.vecadd),
+    VECSUB         -> List(InstrR, FuType.vecu, VECUOpType.vecsub),
+    SCAMUL_8       -> List(InstrR, FuType.vecu, VECUOpType.scamul_8),
+    SCAMUL_16      -> List(InstrR, FuType.vecu, VECUOpType.scamul_16),
+    DOTPROD_8      -> List(InstrR, FuType.vecu, VECUOpType.dotprod_8),
+    DOTPROD_16     -> List(InstrR, FuType.vecu, VECUOpType.dotprod_16)
+  )
+  val table = vecTable
+}
+
 object RVMInstr extends HasNutCoreParameter {
-  val table = RV32MInstr.table ++ (if (XLEN == 64) RV64MInstr.table else Nil) ++ RV32COMInstr.table
+  val table = RV32MInstr.table ++ (if (XLEN == 64) RV64MInstr.table else Nil) ++ RV32ComInstr.table ++ RV32VecInstr.table
 }
