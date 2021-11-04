@@ -60,62 +60,62 @@ class COMU extends NutCoreModule {
   val realAdderRes = (realA + (realB ^ Fill(32, isComSub))) + isComSub
   val imageAdderRes = (imageA + (imageB ^ Fill(32, isComSub))) + isComSub
 
-//  val mul1 = Module(new Multiplier(XLEN+1))
-//  val mul2 = Module(new Multiplier(XLEN+1))
-//
-//  mul1.io.in.bits(0) := MuxCase(0.U, Array(
-//    (func === COMUOpType.commul1)       -> ZeroExt(SignExt(realA, XLEN), XLEN+1),
-//    (func === COMUOpType.commul2)       -> ZeroExt(SignExt(realA, XLEN), XLEN+1),
-//    (func === COMUOpType.commul3)       -> ZeroExt(SignExt(realA, XLEN), XLEN+1),
-//    (func === COMUOpType.commul4)       -> ZeroExt(SignExt(imageA, XLEN), XLEN+1)
-//  ))
-//  mul1.io.in.bits(1) := MuxCase(0.U, Array(
-//    (func === COMUOpType.commul1)       -> ZeroExt(SignExt(imageB, XLEN), XLEN+1),
-//    (func === COMUOpType.commul2)       -> ZeroExt(SignExt(realB, XLEN), XLEN+1),
-//    (func === COMUOpType.commul3)       -> ZeroExt(SignExt(realB, XLEN), XLEN+1),
-//    (func === COMUOpType.commul4)       -> ZeroExt(SignExt(realB, XLEN), XLEN+1)
-//  ))
-//
-//  mul2.io.in.bits(0) := MuxCase(0.U, Array(
-//    (func === COMUOpType.commul1)       -> ZeroExt(SignExt(imageA, XLEN), XLEN+1),
-//    (func === COMUOpType.commul2)       -> ZeroExt(SignExt(imageA, XLEN), XLEN+1),
-//    (func === COMUOpType.commul3)       -> ZeroExt(SignExt(imageA, XLEN), XLEN+1),
-//    (func === COMUOpType.commul4)       -> ZeroExt(SignExt(realA, XLEN), XLEN+1)
-//  ))
-//  mul2.io.in.bits(1) := MuxCase(0.U, Array(
-//    (func === COMUOpType.commul1)       -> ZeroExt(SignExt(realB, XLEN), XLEN+1),
-//    (func === COMUOpType.commul2)       -> ZeroExt(SignExt(imageB, XLEN), XLEN+1),
-//    (func === COMUOpType.commul3)       -> ZeroExt(SignExt(imageB, XLEN), XLEN+1),
-//    (func === COMUOpType.commul4)       -> ZeroExt(SignExt(imageB, XLEN), XLEN+1)
-//  ))
-  val mul1 = Module(new Multiplier(33))
-  val mul2 = Module(new Multiplier(33))
+  val mul1 = Module(new Multiplier(XLEN+1))
+  val mul2 = Module(new Multiplier(XLEN+1))
 
   mul1.io.in.bits(0) := MuxCase(0.U, Array(
-    (func === COMUOpType.commul1)       -> ZeroExt(realA, 33),
-    (func === COMUOpType.commul2)       -> ZeroExt(realA, 33),
-    (func === COMUOpType.commul3)       -> ZeroExt(realA, 33),
-    (func === COMUOpType.commul4)       -> ZeroExt(imageA, 33)
+    (func === COMUOpType.commul1)       -> ZeroExt(SignExt(realA, XLEN), XLEN+1),
+    (func === COMUOpType.commul2)       -> ZeroExt(SignExt(realA, XLEN), XLEN+1),
+    (func === COMUOpType.commul3)       -> ZeroExt(SignExt(realA, XLEN), XLEN+1),
+    (func === COMUOpType.commul4)       -> ZeroExt(SignExt(imageA, XLEN), XLEN+1)
   ))
   mul1.io.in.bits(1) := MuxCase(0.U, Array(
-    (func === COMUOpType.commul1)       -> ZeroExt(imageB, 33),
-    (func === COMUOpType.commul2)       -> ZeroExt(realB, 33),
-    (func === COMUOpType.commul3)       -> ZeroExt(realB, 33),
-    (func === COMUOpType.commul4)       -> ZeroExt(realB, 33)
+    (func === COMUOpType.commul1)       -> ZeroExt(SignExt(imageB, XLEN), XLEN+1),
+    (func === COMUOpType.commul2)       -> ZeroExt(SignExt(realB, XLEN), XLEN+1),
+    (func === COMUOpType.commul3)       -> ZeroExt(SignExt(realB, XLEN), XLEN+1),
+    (func === COMUOpType.commul4)       -> ZeroExt(SignExt(realB, XLEN), XLEN+1)
   ))
 
   mul2.io.in.bits(0) := MuxCase(0.U, Array(
-    (func === COMUOpType.commul1)       -> ZeroExt(imageA, 33),
-    (func === COMUOpType.commul2)       -> ZeroExt(imageA, 33),
-    (func === COMUOpType.commul3)       -> ZeroExt(imageA, 33),
-    (func === COMUOpType.commul4)       -> ZeroExt(realA, 33)
+    (func === COMUOpType.commul1)       -> ZeroExt(SignExt(imageA, XLEN), XLEN+1),
+    (func === COMUOpType.commul2)       -> ZeroExt(SignExt(imageA, XLEN), XLEN+1),
+    (func === COMUOpType.commul3)       -> ZeroExt(SignExt(imageA, XLEN), XLEN+1),
+    (func === COMUOpType.commul4)       -> ZeroExt(SignExt(realA, XLEN), XLEN+1)
   ))
   mul2.io.in.bits(1) := MuxCase(0.U, Array(
-    (func === COMUOpType.commul1)       -> ZeroExt(realB, 33),
-    (func === COMUOpType.commul2)       -> ZeroExt(imageB, 33),
-    (func === COMUOpType.commul3)       -> ZeroExt(imageB, 33),
-    (func === COMUOpType.commul4)       -> ZeroExt(imageB, 33)
+    (func === COMUOpType.commul1)       -> ZeroExt(SignExt(realB, XLEN), XLEN+1),
+    (func === COMUOpType.commul2)       -> ZeroExt(SignExt(imageB, XLEN), XLEN+1),
+    (func === COMUOpType.commul3)       -> ZeroExt(SignExt(imageB, XLEN), XLEN+1),
+    (func === COMUOpType.commul4)       -> ZeroExt(SignExt(imageB, XLEN), XLEN+1)
   ))
+//  val mul1 = Module(new Multiplier(33))
+//  val mul2 = Module(new Multiplier(33))
+//
+//  mul1.io.in.bits(0) := MuxCase(0.U, Array(
+//    (func === COMUOpType.commul1)       -> ZeroExt(realA, 33),
+//    (func === COMUOpType.commul2)       -> ZeroExt(realA, 33),
+//    (func === COMUOpType.commul3)       -> ZeroExt(realA, 33),
+//    (func === COMUOpType.commul4)       -> ZeroExt(imageA, 33)
+//  ))
+//  mul1.io.in.bits(1) := MuxCase(0.U, Array(
+//    (func === COMUOpType.commul1)       -> ZeroExt(imageB, 33),
+//    (func === COMUOpType.commul2)       -> ZeroExt(realB, 33),
+//    (func === COMUOpType.commul3)       -> ZeroExt(realB, 33),
+//    (func === COMUOpType.commul4)       -> ZeroExt(realB, 33)
+//  ))
+//
+//  mul2.io.in.bits(0) := MuxCase(0.U, Array(
+//    (func === COMUOpType.commul1)       -> ZeroExt(imageA, 33),
+//    (func === COMUOpType.commul2)       -> ZeroExt(imageA, 33),
+//    (func === COMUOpType.commul3)       -> ZeroExt(imageA, 33),
+//    (func === COMUOpType.commul4)       -> ZeroExt(realA, 33)
+//  ))
+//  mul2.io.in.bits(1) := MuxCase(0.U, Array(
+//    (func === COMUOpType.commul1)       -> ZeroExt(realB, 33),
+//    (func === COMUOpType.commul2)       -> ZeroExt(imageB, 33),
+//    (func === COMUOpType.commul3)       -> ZeroExt(imageB, 33),
+//    (func === COMUOpType.commul4)       -> ZeroExt(imageB, 33)
+//  ))
 
   mul1.io.in.valid := valid && func(2).asBool()
   mul2.io.in.valid := valid && func(2).asBool()

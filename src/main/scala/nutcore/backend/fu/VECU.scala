@@ -55,9 +55,6 @@ class VECU extends NutCoreModule {
   val vecA16= VecInit(src1(63,48), src1(47,32), src1(31,16), src1(15,0))
   val vecB16= VecInit(src2(63,48), src2(47,32), src2(31,16), src2(15,0))
 
-//  val vecA = Mux(VECUOpType.is16(func), VecInit(src1(63,48), src1(47,32), src1(31,16), src1(15,0)), VecInit(src1(63,56), src1(55,48), src1(47,40), src1(39,32), src1(31,24), src1(23,16), src1(15,8), src1(7, 0)))
-//  val vecB = Mux(VECUOpType.is16(func), VecInit(src2(63,48), src2(47,32), src2(31,16), src2(15,0)), VecInit(src2(63,56), src2(55,48), src2(47,40), src2(39,32), src2(31,24), src2(23,16), src2(15,8), src2(7, 0)))
-
   val isVecSub = VECUOpType.isSub(func)
   def Adder(src1: UInt, src2: UInt, isSub: Bool): UInt = {
     src1 + (src2 ^ Fill(8, isSub)) + isSub
@@ -71,14 +68,12 @@ class VECU extends NutCoreModule {
       mul(i).in.bits(1) := Mux(func(0).asBool(), vecB16(i), src2)
       mul(i).in.valid := valid && func(2).asBool()
       mul(i).out.ready := io.out.ready
-//      mul(i).sign <> DontCare
     }
     for(i <- 4 to 7) {
       mul(i).in.bits(0) := 0.U
       mul(i).in.bits(1) := 0.U
       mul(i).in.valid := false.B
       mul(i).out.ready := io.out.ready
-//      mul(i).sign <> DontCare
     }
   }.otherwise {
     for(i <- 0 to 7) {
@@ -86,7 +81,6 @@ class VECU extends NutCoreModule {
       mul(i).in.bits(1) := Mux(func(0).asBool(), vecB8(i), src2)
       mul(i).in.valid := valid && func(1).asBool()
       mul(i).out.ready := io.out.ready
-//      mul(i).sign <> DontCare
     }
   }
   (0 to 7).map(i => mul(i).sign := true.B)
@@ -96,6 +90,7 @@ class VECU extends NutCoreModule {
                    mul(4).out.bits(7, 0) << 24 | mul(5).out.bits(7, 0) << 16 | mul(6).out.bits(7, 0) << 8 | mul(7).out.bits(7, 0)
   val vec8AddRes = vecAdderRes(0)(7, 0) << 56 | vecAdderRes(1)(7, 0) << 48 | vecAdderRes(2)(7, 0) << 40 | vecAdderRes(3)(7, 0) << 32 |
                    vecAdderRes(4)(7, 0) << 24 | vecAdderRes(5)(7, 0) << 16 | vecAdderRes(6)(7, 0) << 8 | vecAdderRes(7)(7, 0)
+
 
   io.out.bits := MuxCase(0.U, Array(
     (func === VECUOpType.vecadd || func === VECUOpType.vecsub)      ->     vec8AddRes,
