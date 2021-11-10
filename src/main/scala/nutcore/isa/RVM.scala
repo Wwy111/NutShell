@@ -75,6 +75,7 @@ object RV32ComInstr extends HasInstrType with HasNutCoreParameter {
   def COMMUL2 = BitPat("b0000000_?????_?????_010_?????_0001011")
   def COMMUL3 = BitPat("b0000000_?????_?????_011_?????_0001011")
   def COMMUL4 = BitPat("b0000000_?????_?????_100_?????_0001011")
+  def COMCONJ = BitPat("b????????????_?????_111_?????_0001011")
 
   val comTable = Array(
     COMADD         -> List(InstrR, FuType.comu, COMUOpType.comadd),
@@ -82,7 +83,8 @@ object RV32ComInstr extends HasInstrType with HasNutCoreParameter {
     COMMUL1        -> List(InstrR, FuType.comu, COMUOpType.commul1),
     COMMUL2        -> List(InstrR, FuType.comu, COMUOpType.commul2),
     COMMUL3        -> List(InstrR, FuType.comu, COMUOpType.commul3),
-    COMMUL4        -> List(InstrR, FuType.comu, COMUOpType.commul4)
+    COMMUL4        -> List(InstrR, FuType.comu, COMUOpType.commul4),
+    COMCONJ        -> List(InstrI, FuType.comu, COMUOpType.comconj)
   )
   val table = comTable
 }
