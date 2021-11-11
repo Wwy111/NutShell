@@ -410,7 +410,8 @@ class Backend_ooo(implicit val p: NutCoreConfig) extends NutCoreModule with HasR
     valid = mdurs.io.out.valid, 
     src1 = mdurs.io.out.bits.decode.data.src1, 
     src2 = mdurs.io.out.bits.decode.data.src2, 
-    func = mdurs.io.out.bits.decode.ctrl.fuOpType
+    func = mdurs.io.out.bits.decode.ctrl.fuOpType,
+    com = false.B
   )
   val mduWritebackReady = Wire(Bool())
   mdu.io.out.ready := mduDelayer.io.in.ready

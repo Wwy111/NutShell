@@ -130,17 +130,19 @@ class Divider(len: Int = 64) extends NutCoreModule {
 }
 
 class MDUIO extends FunctionUnitIO {
+  val com = Input(Bool())
 }
 
 class MDU extends NutCoreModule {
   val io = IO(new MDUIO)
 
-  val (valid, src1, src2, func) = (io.in.valid, io.in.bits.src1, io.in.bits.src2, io.in.bits.func)
-  def access(valid: Bool, src1: UInt, src2: UInt, func: UInt): UInt = {
+  val (valid, src1, src2, func, com) = (io.in.valid, io.in.bits.src1, io.in.bits.src2, io.in.bits.func, io.com)
+  def access(valid: Bool, src1: UInt, src2: UInt, func: UInt, com: Bool): UInt = {
     this.valid := valid
     this.src1 := src1
     this.src2 := src2
     this.func := func
+    this.com  := com
     io.out.bits
   }
 
@@ -148,41 +150,107 @@ class MDU extends NutCoreModule {
   val isDivSign = MDUOpType.isDivSign(func)
   val isW = MDUOpType.isW(func)
 
-  val mul = Module(new Multiplier(XLEN + 1))
+  val mul1 = Module(new Multiplier(XLEN + 1))
+  val mul2 = Module(new Multiplier(XLEN + 1))
   val div = Module(new Divider(XLEN))
-  List(mul.io, div.io).map { case x =>
+  List(mul1.io, mul2.io, div.io).map { case x =>
     x.sign := isDivSign
     x.out.ready := io.out.ready
   }
 
-  val signext = SignExt(_: UInt, XLEN+1)
-  val zeroext = ZeroExt(_: UInt, XLEN+1)
-  val mulInputFuncTable = List(
-    MDUOpType.mul    -> (zeroext, zeroext),
-    MDUOpType.mulh   -> (signext, signext),
-    MDUOpType.mulhsu -> (signext, zeroext),
-    MDUOpType.mulhu  -> (zeroext, zeroext)
-  )
-  mul.io.in.bits(0) := LookupTree(func(1,0), mulInputFuncTable.map(p => (p._1(1,0), p._2._1(src1))))
-  mul.io.in.bits(1) := LookupTree(func(1,0), mulInputFuncTable.map(p => (p._1(1,0), p._2._2(src2))))
+  when(!com) {
+    val signext = SignExt(_: UInt, XLEN + 1)
+    val zeroext = ZeroExt(_: UInt, XLEN + 1)
+    val mulInputFuncTable = List(
+      MDUOpType.mul -> (zeroext, zeroext),
+      MDUOpType.mulh -> (signext, signext),
+      MDUOpType.mulhsu -> (signext, zeroext),
+      MDUOpType.mulhu -> (zeroext, zeroext)
+    )
+    mul1.io.in.bits(0) := LookupTree(func(1, 0), mulInputFuncTable.map(p => (p._1(1, 0), p._2._1(src1))))
+    mul1.io.in.bits(1) := LookupTree(func(1, 0), mulInputFuncTable.map(p => (p._1(1, 0), p._2._2(src2))))
 
-  val divInputFunc = (x: UInt) => Mux(isW, Mux(isDivSign, SignExt(x(31,0), XLEN), ZeroExt(x(31,0), XLEN)), x)
-  div.io.in.bits(0) := divInputFunc(src1)
-  div.io.in.bits(1) := divInputFunc(src2)
+    mul2.io.in.bits(0) := 0.U
+    mul2.io.in.bits(1) := 0.U
 
-  mul.io.in.valid := io.in.valid && !isDiv
-  div.io.in.valid := io.in.valid && isDiv
+    val divInputFunc = (x: UInt) => Mux(isW, Mux(isDivSign, SignExt(x(31, 0), XLEN), ZeroExt(x(31, 0), XLEN)), x)
+    div.io.in.bits(0) := divInputFunc(src1)
+    div.io.in.bits(1) := divInputFunc(src2)
 
-  val mulRes = Mux(func(1,0) === MDUOpType.mul(1,0), mul.io.out.bits(XLEN-1,0), mul.io.out.bits(2*XLEN-1,XLEN))
-  val divRes = Mux(func(1) /* rem */, div.io.out.bits(2*XLEN-1,XLEN), div.io.out.bits(XLEN-1,0))
-  val res = Mux(isDiv, divRes, mulRes)
-  io.out.bits := Mux(isW, SignExt(res(31,0),XLEN), res)
+    mul1.io.in.valid := io.in.valid && !isDiv
+    mul2.io.in.valid := false.B
+    div.io.in.valid := io.in.valid && isDiv
 
-  val isDivReg = Mux(io.in.fire(), isDiv, RegNext(isDiv))
-  io.in.ready := Mux(isDiv, div.io.in.ready, mul.io.in.ready)
-  io.out.valid := Mux(isDivReg, div.io.out.valid, mul.io.out.valid)
+    val mulRes = Mux(func(1, 0) === MDUOpType.mul(1, 0), mul1.io.out.bits(XLEN - 1, 0), mul1.io.out.bits(2 * XLEN - 1, XLEN))
+    val divRes = Mux(func(1) /* rem */ , div.io.out.bits(2 * XLEN - 1, XLEN), div.io.out.bits(XLEN - 1, 0))
+    val res = Mux(isDiv, divRes, mulRes)
+    io.out.bits := Mux(isW, SignExt(res(31, 0), XLEN), res)
 
+    val isDivReg = Mux(io.in.fire(), isDiv, RegNext(isDiv))
+    io.in.ready := Mux(isDiv, div.io.in.ready, mul1.io.in.ready)
+    io.out.valid := Mux(isDivReg, div.io.out.valid, mul1.io.out.valid)
+  }.otherwise {
+    val realA = src1(63, 32)
+    val imageA = src1(31, 0)
+    val realB = src2(63, 32)
+    val imageB = src2(31, 0)
+
+    val isComSub = COMUOpType.isDiff(func)
+    val realAdderRes = (realA + (realB ^ Fill(32, isComSub))) + isComSub
+    val imageAdderRes = (imageA + (imageB ^ Fill(32, isComSub))) + isComSub
+
+    val imageInvert = ~imageA + 1.U(32.W)
+    val Aconj = (realA << 32) | imageInvert
+//    val mul1 = Module(new Multiplier(XLEN+1))
+//    val mul2 = Module(new Multiplier(XLEN+1))
+
+    mul1.io.in.bits(0) := MuxCase(0.U, Array(
+      (func === COMUOpType.comcmula || func === COMUOpType.fcomcmula)       -> ZeroExt(SignExt(realA, XLEN), XLEN+1),
+      (func === COMUOpType.commuls  || func === COMUOpType.fcommuls)       -> ZeroExt(SignExt(realA, XLEN), XLEN+1),
+      (func === COMUOpType.commula  || func === COMUOpType.fcommula)       -> ZeroExt(SignExt(realA, XLEN), XLEN+1),
+      (func === COMUOpType.comcmuls || func === COMUOpType.fcomcmuls)       -> ZeroExt(SignExt(imageA, XLEN), XLEN+1)
+    ))
+    mul1.io.in.bits(1) := MuxCase(0.U, Array(
+      (func === COMUOpType.comcmula || func === COMUOpType.fcomcmula)       -> ZeroExt(SignExt(imageB, XLEN), XLEN+1),
+      (func === COMUOpType.commuls  || func === COMUOpType.fcommuls)       -> ZeroExt(SignExt(realB, XLEN), XLEN+1),
+      (func === COMUOpType.commula  || func === COMUOpType.fcommula)       -> ZeroExt(SignExt(realB, XLEN), XLEN+1),
+      (func === COMUOpType.comcmuls || func === COMUOpType.fcomcmuls)       -> ZeroExt(SignExt(realB, XLEN), XLEN+1)
+    ))
+
+    mul2.io.in.bits(0) := MuxCase(0.U, Array(
+      (func === COMUOpType.comcmula || func === COMUOpType.fcomcmula)       -> ZeroExt(SignExt(imageA, XLEN), XLEN+1),
+      (func === COMUOpType.commuls  || func === COMUOpType.fcommuls)       -> ZeroExt(SignExt(imageA, XLEN), XLEN+1),
+      (func === COMUOpType.commula  || func === COMUOpType.fcommula)       -> ZeroExt(SignExt(imageA, XLEN), XLEN+1),
+      (func === COMUOpType.comcmuls || func === COMUOpType.fcomcmuls)       -> ZeroExt(SignExt(realA, XLEN), XLEN+1)
+    ))
+    mul2.io.in.bits(1) := MuxCase(0.U, Array(
+      (func === COMUOpType.comcmula || func === COMUOpType.fcomcmula)       -> ZeroExt(SignExt(realB, XLEN), XLEN+1),
+      (func === COMUOpType.commuls  || func === COMUOpType.fcommuls)       -> ZeroExt(SignExt(imageB, XLEN), XLEN+1),
+      (func === COMUOpType.commula  || func === COMUOpType.fcommula)       -> ZeroExt(SignExt(imageB, XLEN), XLEN+1),
+      (func === COMUOpType.comcmuls || func === COMUOpType.fcomcmuls)       -> ZeroExt(SignExt(imageB, XLEN), XLEN+1)
+    ))
+
+    div.io.in.bits(0) := 0.U
+    div.io.in.bits(1) := 0.U
+    div.io.in.valid := false.B
+    mul1.io.in.valid := valid && func(2).asBool()
+    mul2.io.in.valid := valid && func(2).asBool()
+    mul1.io.out.ready := io.out.ready
+    mul2.io.out.ready := io.out.ready
+    mul1.io.sign <> DontCare
+    mul2.io.sign <> DontCare
+
+    val mul1Res = mul1.io.out.bits(XLEN-1, 0)
+    val mul2Res = mul2.io.out.bits(XLEN-1, 0)
+
+    val commulRes = SignExt((mul1Res + (mul2Res ^ Fill(XLEN, isComSub))) + isComSub, XLEN)
+    val mulResSh = SignExt(((mul1Res.asSInt() >> 16).asUInt() + ((mul2Res.asSInt() >> 16).asUInt() ^ Fill(XLEN, isComSub))) + isComSub, XLEN)
+
+    io.out.bits := Mux(func(2).asBool(), Mux(func(3).asBool(), mulResSh, commulRes), Mux(func(0).asBool, Aconj, (realAdderRes << 32) | imageAdderRes))
+    io.in.ready := Mux(func(2).asBool(), mul1.io.in.ready && mul2.io.in.ready, io.out.ready)
+    io.out.valid := Mux(func(2).asBool(), mul1.io.out.valid && mul2.io.out.valid, valid)
+  }
   Debug("[FU-MDU] irv-orv %d %d - %d %d\n", io.in.ready, io.in.valid, io.out.ready, io.out.valid)
 
-  BoringUtils.addSource(mul.io.out.fire(), "perfCntCondMmulInstr")
+  BoringUtils.addSource(mul1.io.out.fire(), "perfCntCondMmulInstr")
 }

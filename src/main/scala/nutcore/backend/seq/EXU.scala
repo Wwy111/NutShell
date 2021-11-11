@@ -59,7 +59,7 @@ class EXU(implicit val p: NutCoreConfig) extends NutCoreModule {
   lsu.io.out.ready := true.B
 
   val mdu = Module(new MDU)
-  val mduOut = mdu.access(valid = fuValids(FuType.mdu), src1 = src1, src2 = src2, func = fuOpType)
+  val mduOut = mdu.access(valid = fuValids(FuType.mdu) || fuValids(FuType.comu), src1 = src1, src2 = src2, func = fuOpType, com = fuValids(FuType.comu))
   mdu.io.out.ready := true.B
 
   // val csr = if (Settings.get("MmodeOnly")) Module(new CSR_M) else Module(new CSR)
@@ -83,9 +83,9 @@ class EXU(implicit val p: NutCoreConfig) extends NutCoreModule {
   mou.io.cfIn := io.in.bits.cf
   mou.io.out.ready := true.B
 
-  val comu = Module(new COMU)
-  val comuOut = comu.access(valid = fuValids(FuType.comu), src1 = src1, src2 = src2, func = fuOpType)
-  comu.io.out.ready := true.B
+//  val comu = Module(new COMU)
+//  val comuOut = comu.access(valid = fuValids(FuType.comu), src1 = src1, src2 = src2, func = fuOpType)
+//  comu.io.out.ready := true.B
 
 //  val vecu = Module(new VECU)
 //  val vecuOut = vecu.access(valid = fuValids(FuType.vecu), src1 = src1, src2 = src2, func = fuOpType)
@@ -110,7 +110,7 @@ class EXU(implicit val p: NutCoreConfig) extends NutCoreModule {
   io.out.valid := io.in.valid && MuxLookup(fuType, true.B, List(
     FuType.lsu -> lsu.io.out.valid,
     FuType.mdu -> mdu.io.out.valid,
-    FuType.comu -> comu.io.out.valid
+    FuType.comu -> mdu.io.out.valid
 //    FuType.vecu -> vecu.io.out.valid
   ))
 
@@ -119,7 +119,8 @@ class EXU(implicit val p: NutCoreConfig) extends NutCoreModule {
   io.out.bits.commits(FuType.csr) := csrOut
   io.out.bits.commits(FuType.mdu) := mduOut
   io.out.bits.commits(FuType.mou) := 0.U
-  io.out.bits.commits(FuType.comu):= comuOut
+  io.out.bits.commits(FuType.comu):= Mux(fuValids(FuType.comu), mduOut, 0.U)
+//  io.out.bits.commits(FuType.comu):= comuOut
 //  io.out.bits.commits(FuType.vecu):= vecuOut
 
   io.in.ready := !io.in.valid || io.out.fire()
@@ -127,7 +128,7 @@ class EXU(implicit val p: NutCoreConfig) extends NutCoreModule {
   io.forward.valid := io.in.valid
   io.forward.wb.rfWen := io.in.bits.ctrl.rfWen
   io.forward.wb.rfDest := io.in.bits.ctrl.rfDest
-  io.forward.wb.rfData := Mux(comu.io.out.fire() && (!COMUOpType.isMul(fuOpType)), comuOut, Mux(alu.io.out.fire(), aluOut, lsuOut))
+  io.forward.wb.rfData := Mux(mdu.io.out.fire() && fuValids(FuType.comu) && (!COMUOpType.isMul(fuOpType)), mduOut, Mux(alu.io.out.fire(), aluOut, lsuOut))
   io.forward.fuType := io.in.bits.ctrl.fuType
 
   val isBru = ALUOpType.isBru(fuOpType)
