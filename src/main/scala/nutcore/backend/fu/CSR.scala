@@ -868,24 +868,24 @@ class CSR(implicit val p: NutCoreConfig) extends NutCoreModule with HasCSRConst{
     BoringUtils.addSource(readWithScala(perfCntList("Mcycle")._1), "simCycleCnt")
     BoringUtils.addSource(readWithScala(perfCntList("Minstret")._1), "simInstrCnt")
 
-    if (hasPerfCnt) {
-      // display all perfcnt when nutcoretrap is executed
-      val PrintPerfCntToCSV = true
-      when (nutcoretrap) {
-        printf("======== PerfCnt =========\n")
-        perfCntList.toSeq.sortBy(_._2._1).map { case (name, (addr, boringId)) =>
-          printf("%d <- " + name + "\n", readWithScala(addr)) }
-        if(PrintPerfCntToCSV){
-        printf("======== PerfCntCSV =========\n\n")
-        perfCntList.toSeq.sortBy(_._2._1).map { case (name, (addr, boringId)) =>
-          printf(name + ", ")}
-        printf("\n\n\n")
-        perfCntList.toSeq.sortBy(_._2._1).map { case (name, (addr, boringId)) =>
-          printf("%d, ", readWithScala(addr)) }
-        printf("\n\n\n")
-        }
-      }
-    }
+//    if (hasPerfCnt) {
+//      // display all perfcnt when nutcoretrap is executed
+//      val PrintPerfCntToCSV = true
+//      when (nutcoretrap) {
+//        printf("======== PerfCnt =========\n")
+//        perfCntList.toSeq.sortBy(_._2._1).map { case (name, (addr, boringId)) =>
+//          printf("%d <- " + name + "\n", readWithScala(addr)) }
+//        if(PrintPerfCntToCSV){
+//        printf("======== PerfCntCSV =========\n\n")
+//        perfCntList.toSeq.sortBy(_._2._1).map { case (name, (addr, boringId)) =>
+//          printf(name + ", ")}
+//        printf("\n\n\n")
+//        perfCntList.toSeq.sortBy(_._2._1).map { case (name, (addr, boringId)) =>
+//          printf("%d, ", readWithScala(addr)) }
+//        printf("\n\n\n")
+//        }
+//      }
+//    }
 
     // for differential testing
     BoringUtils.addSource(RegNext(priviledgeMode), "difftestMode")
