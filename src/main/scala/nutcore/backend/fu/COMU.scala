@@ -24,8 +24,9 @@ import utils._
 
 object COMUOpType {
   def comadd   = "b0000".U
-  def comsub   = "b0010".U
   def comconj  = "b0001".U
+  def comsub   = "b0010".U
+  def comform  = "b0011".U
 
   def comcmula = "b0101".U      // A(63,32)B(31,0)+A(31,0)B(63,32)
   def commuls  = "b0111".U      // A(63,32)B(63,32)-A(31,0)B(31,0)
@@ -39,6 +40,7 @@ object COMUOpType {
   def fcomcmuls = "b1110".U
 
   def isConj(op: UInt) = op === comconj
+  def isForm(op: UInt) = op === comform
   def isDiff(op: UInt) = op(1)
   def isFixed(op: UInt) = op(3)
   def isMul(op:UInt) = op(2)

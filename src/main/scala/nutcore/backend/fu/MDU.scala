@@ -233,8 +233,8 @@ class MDU extends NutCoreModule {
     div.io.in.bits(0) := 0.U
     div.io.in.bits(1) := 0.U
     div.io.in.valid := false.B
-    mul1.io.in.valid := valid && func(2).asBool()
-    mul2.io.in.valid := valid && func(2).asBool()
+    mul1.io.in.valid := valid && COMUOpType.isMul(func)
+    mul2.io.in.valid := valid && COMUOpType.isMul(func)
     mul1.io.out.ready := io.out.ready
     mul2.io.out.ready := io.out.ready
     mul1.io.sign <> DontCare
@@ -246,9 +246,16 @@ class MDU extends NutCoreModule {
     val commulRes = SignExt((mul1Res + (mul2Res ^ Fill(XLEN, isComSub))) + isComSub, XLEN)
     val mulResSh = SignExt(((mul1Res.asSInt() >> 16).asUInt() + ((mul2Res.asSInt() >> 16).asUInt() ^ Fill(XLEN, isComSub))) + isComSub, XLEN)
 
-    io.out.bits := Mux(func(2).asBool(), Mux(func(3).asBool(), mulResSh, commulRes), Mux(func(0).asBool, Aconj, (realAdderRes << 32) | imageAdderRes))
-    io.in.ready := Mux(func(2).asBool(), mul1.io.in.ready && mul2.io.in.ready, io.out.ready)
-    io.out.valid := Mux(func(2).asBool(), mul1.io.out.valid && mul2.io.out.valid, valid)
+//    io.out.bits := MuxCase((realAdderRes << 32) | imageAdderRes, Array(
+//      COMUOpType.isConj(func)      -> Aconj,
+//      (COMUOpType.isMul(func) && (!COMUOpType.isFixed(func)))  ->    commulRes,
+//      (COMUOpType.isMul(func) && COMUOpType.isFixed(func))     ->    mulResSh,
+//      COMUOpType.isForm(func)                                  ->    ((src1 << 32) | src2)
+//    ))
+    io.out.bits := Mux(COMUOpType.isMul(func), Mux(COMUOpType.isFixed(func), mulResSh, commulRes),
+                   Mux(COMUOpType.isConj(func), Aconj, Mux(COMUOpType.isForm(func), (src1 << 32) | (src2 & "h00000000ffffffff".U), (realAdderRes << 32) | imageAdderRes)))
+    io.in.ready := Mux(COMUOpType.isMul(func), mul1.io.in.ready && mul2.io.in.ready, io.out.ready)
+    io.out.valid := Mux(COMUOpType.isMul(func), mul1.io.out.valid && mul2.io.out.valid, valid)
   }
   Debug("[FU-MDU] irv-orv %d %d - %d %d\n", io.in.ready, io.in.valid, io.out.ready, io.out.valid)
 
