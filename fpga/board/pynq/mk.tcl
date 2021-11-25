@@ -1,5 +1,5 @@
 set device xc7z020-1-clg400
-set board tul.com.tw:pynq-z2:part0:1.0
+set board www.digilentinc.com:pynq-z1:part0:1.0
 
 set script_dir  [file dirname [info script]]
 

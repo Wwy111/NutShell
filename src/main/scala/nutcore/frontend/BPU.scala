@@ -413,6 +413,14 @@ class BPU_inorder extends NutCoreModule {
     }
   }
 
+  when (req.valid) {
+    when (req.fuOpType === ALUOpType.ret && req.actualTarget =/= ras.read(sp.value)) {
+      printf("!!!!!!!!!!return mismatch, pc is %x!!!!!!!!!\n", io.in.pc.bits)
+      printf("return address is %x, shadow stack is %x\n", req.actualTarget, ras.read(sp.value))
+      printf("shadow stack is %x\n%x\n%x\n%x\n", ras.read(1.U), ras.read(2.U), ras.read(3.U), ras.read(4.U))
+    }
+  }
+
   io.out.target := Mux(btbRead._type === BTBtype.R, rasTarget, btbRead.target)
   // io.out.target := Mux(crosslineJumpLatch && !flush, crosslineJumpTarget, Mux(btbRead._type === BTBtype.R, rasTarget, btbRead.target))
   // io.out.brIdx  := btbRead.brIdx & Fill(3, io.out.valid)

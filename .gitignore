@@ -350,5 +350,5 @@ fpga/.Xil/
 .vscode/
 *.bin
 *.db
-./ready-to-run/*
-./metals/*
+./ready-to-run/
+./metals/
