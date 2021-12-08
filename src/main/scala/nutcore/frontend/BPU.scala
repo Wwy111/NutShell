@@ -55,6 +55,7 @@ class BPUUpdateReq extends NutCoreBundle {
   val fuOpType = Output(FuOpType())
   val btbType = Output(BTBtype())
   val isRVC = Output(Bool()) // for ras, save PC+2 to stack if is RVC
+  val isJalr = Output(Bool())
 }
 
 // nextline predicter generates NPC from current NPC in 1 cycle

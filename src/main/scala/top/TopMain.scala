@@ -62,6 +62,9 @@ object TopMain extends App {
     case (f, v) =>
       println(f + " = " + v)
   }
+
+  CFG.generate()
+
   if (board == "sim") {
     Driver.execute(args, () => new NutShellSimTop)
   } else {

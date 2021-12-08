@@ -16,6 +16,8 @@
 
 package top
 
+import scala.io.Source
+
 object DefaultSettings {
   def apply() = Map(
     "MemMapBase" -> 0x0000000000000000L,
@@ -104,6 +106,39 @@ object Settings {
   }
   def getInt(field: String) = {
     settings(field).asInstanceOf[Int]
+  }
+}
+
+
+object CFG {
+
+  val srcArray = new Array[Long](16)
+  val destArray = Array.ofDim[Long](16, 16)
+
+  def generate() = {
+
+    val file = Source.fromFile("/home/wwy/cfg.txt")
+    val iter = file.getLines()
+    val srcNum = Integer.parseInt(iter.next())
+
+    for(i <- 0 to (srcNum - 1)) {
+      srcArray(i) = BigInt(iter.next(), 16).toLong
+      printf("src : %x, dest : ", srcArray(i))
+      val destNum = Integer.parseInt(iter.next())
+      for(j <- 0 to (destNum - 1)) {
+        destArray(i)(j) = BigInt(iter.next(), 16).toLong
+        printf("%x ", destArray(i)(j))
+      }
+      printf("\n")
+    }
+  }
+
+  def getSrc(addr: Int) = {
+    srcArray(addr)
+  }
+
+  def getDest(srcAddr: Int, destAddr: Int) = {
+    destArray(srcAddr)(destAddr)
   }
 }
 

@@ -153,6 +153,7 @@ class ALU(hasBru: Boolean = false) extends NutCoreModule {
   bpuUpdateReq.fuOpType := func
   bpuUpdateReq.btbType := LookupTree(func, RV32I_BRUInstr.bruFuncTobtbTypeTable)
   bpuUpdateReq.isRVC := isRVC
+  bpuUpdateReq.isJalr := (io.cfIn.instr(6, 0) === "b1100111".U) && (func =/= ALUOpType.ret)
 
   if(hasBru){
     BoringUtils.addSource(RegNext(bpuUpdateReq), "bpuUpdateReq")

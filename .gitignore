@@ -351,4 +351,4 @@ fpga/.Xil/
 *.bin
 *.db
 ./ready-to-run/
-./metals/
+.metals/metals.h2.db
