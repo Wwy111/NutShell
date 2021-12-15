@@ -89,6 +89,9 @@ void init_ram(const char *img) {
 
   //new add
   addpageSv39();
+
+  // printf("ram[82] : %lx\n", ram[82]);
+  // ram[0x5ff0 >> 3] = 0x80000014;
   //new end
 }
 

@@ -114,10 +114,18 @@ object CFG {
 
   val srcArray = new Array[Long](16)
   val destArray = Array.ofDim[Long](16, 16)
+  val cfgID = new Array[Byte](1)
+  def generate(num: String) = {
 
-  def generate() = {
-
-    val file = Source.fromFile("/home/wwy/cfg.txt")
+//    val file = Source.fromFile("/home/wwy/cfg.txt")
+    val file = (num match {
+      case "one"    => Source.fromFile("/home/wwy/cfg1.txt")
+      case "two"    => Source.fromFile("/home/wwy/cfg2.txt")
+    })
+    cfgID(0) = (num match {
+      case "one"    => 1
+      case "two"    => 2
+    })
     val iter = file.getLines()
     val srcNum = Integer.parseInt(iter.next())
 
@@ -131,6 +139,11 @@ object CFG {
       }
       printf("\n")
     }
+//    destArray(0)(0) = 0L
+//    destArray(1)(0) = 0L
+//    destArray(2)(0) = 0L
+//    destArray(3)(0) = 0L
+//    destArray(4)(0) = 0L
   }
 
   def getSrc(addr: Int) = {
@@ -139,6 +152,10 @@ object CFG {
 
   def getDest(srcAddr: Int, destAddr: Int) = {
     destArray(srcAddr)(destAddr)
+  }
+
+  def getCFDID() = {
+    cfgID(0)
   }
 }
 

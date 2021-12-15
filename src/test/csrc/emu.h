@@ -9,6 +9,7 @@
 //#include "VSimTop__Dpi.h"
 #include "common.h"
 #include "VNutShellSimTop.h"
+#include "doublylinkedlist.h"
 #if VM_TRACE
 #include <verilated_vcd_c.h>	// Trace file format header
 #endif
@@ -92,12 +93,51 @@ class Emulator {
     }
   }
 
+  void cfi_check(void) {
+    int i;
+
+    if(dut_ptr->io_cfi_out_valid == 0) {
+      dut_ptr->io_cfi_in_valid = 0;
+      return;
+    }
+    else {
+      dut_ptr->io_cfi_in_valid = 1;
+
+      if(dut_ptr->io_cfi_out_cmd == 3){         // lookupIoT
+        dut_ptr->io_cfi_in_id = dut_ptr->io_cfi_out_id;
+        dut_ptr->io_cfi_in_cmd = 1;             // lookupfail
+        return;
+      }
+      else if(dut_ptr->io_cfi_out_cmd == 4){    // lookupCloud
+        cfglink p = search(dut_ptr->io_cfi_out_srcAddr);
+        
+        for(i = 0; i < p->destNum; i++) {
+          if(p->dest[i] == dut_ptr->io_cfi_out_dstAddr) {
+            dut_ptr->io_cfi_in_id = dut_ptr->io_cfi_out_id;
+            dut_ptr->io_cfi_in_cmd = 0;         // patch
+            dut_ptr->io_cfi_in_srcAddr = dut_ptr->io_cfi_out_srcAddr;
+            dut_ptr->io_cfi_in_dstAddr = dut_ptr->io_cfi_out_dstAddr;
+            return;
+          }
+        }
+        if(i == p->destNum) {
+          dut_ptr->io_cfi_in_cmd = 2;
+          return;
+        }
+      }
+    }
+  }
+
   void single_cycle() {
+    cfi_check();
     dut_ptr->clock = 0;
     dut_ptr->eval();
 
     dut_ptr->clock = 1;
     dut_ptr->eval();
+    if(dut_ptr->io_cfi_in_cmd == 2) {          // stop the machine
+      dut_ptr->reset = 1;
+    }
 
 #if VM_TRACE
     tfp->dump(cycles);

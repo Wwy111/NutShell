@@ -59,11 +59,7 @@ class NutShellSimTop extends Module {
     val logCtrl = new LogCtrlIO
     val difftestCtrl = new DiffTestCtrlIO
 
-    val cfi = new Bundle {
-      val cmd = Input(CFICmdType.apply())
-      val addr = Input(UInt(8.W))
-      val data = Input(UInt(39.W))
-    }
+    val cfi = new CFIIoTIO
   })
 
   lazy val config = NutCoreConfig(FPGAPlatform = false)
@@ -116,11 +112,5 @@ class NutShellSimTop extends Module {
 
   io.difftestCtrl <> mmio.io.difftestCtrl
 
-  val cfi = Module(new CFI)
-  val cfiReq = WireInit(0.U.asTypeOf(new BPUUpdateReq))
-  BoringUtils.addSink(cfiReq, "bpuUpdateReq")
-  cfi.io.soc.req := cfiReq.valid && cfiReq.isJalr
-  cfi.io.soc.srcAddr := cfiReq.pc
-  cfi.io.soc.dstAddr := cfiReq.actualTarget
-  cfi.io.iot <> io.cfi
+  io.cfi <> soc.io.cfi
 }

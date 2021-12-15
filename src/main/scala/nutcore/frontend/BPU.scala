@@ -400,7 +400,10 @@ class BPU_inorder extends NutCoreModule {
       //}
     }
   }
-  when (req.valid) {
+
+  val cfiValid = WireInit(true.B)
+  BoringUtils.addSink(cfiValid, "cfiValid")
+  when (req.valid && cfiValid) {
     when (req.fuOpType === ALUOpType.call)  {
       ras.write(sp.value + 1.U, Mux(req.isRVC, req.pc + 2.U, req.pc + 4.U))
       // raBrIdxs.write(sp.value + 1.U, Mux(req.pc(1), 2.U, 1.U))

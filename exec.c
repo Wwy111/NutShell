@@ -30,7 +30,7 @@ int main(void)
 
     if(pidA == 0) {
         printf("son process A pid is %d, father process os %d\n", getpid(), getppid());
-        // execlp("make", "make", "emu", "IMAGE=./ready-to-run/microbench-riscv64-nutshell.bin", NULL);
+        execlp("make", "make", "emu", "IMAGE=./ready-to-run/microbench-riscv64-nutshell.bin", "NUM=one", NULL);
         close(fd_AWBR[0]);
         close(fd_ARBW[1]);
         uint8_t matA[2][2] = {{0, 1}, {2, 3}};
@@ -43,7 +43,7 @@ int main(void)
     }
     if(pidB == 0) {
         printf("son process B pid is %d, father process os %d\n", getpid(), getppid());
-        // execlp("make", "make", "emu", "IMAGE=./ready-to-run/microbench-riscv64-nutshell.bin", NULL);
+        execlp("make", "make", "emu", "IMAGE=./ready-to-run/microbench-riscv64-nutshell.bin", "NUM=two", NULL);
         close(fd_AWBR[1]);
         close(fd_ARBW[0]);
         uint8_t matB[2][2];
@@ -56,10 +56,6 @@ int main(void)
             }
             printf("\n");
         }
-        // write(STDOUT_FILENO, matB, n);
-        // int n = read(fd[0], line, 20);
-        // write(STDOUT_FILENO, line, n);
-        // printf("%s", line);
     }
 
     if(pidA > 0 && pidB > 0) {

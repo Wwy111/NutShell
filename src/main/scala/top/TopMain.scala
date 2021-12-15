@@ -43,6 +43,7 @@ object TopMain extends App {
   }
   val board = parseArgs("BOARD", args)
   val core = parseArgs("CORE", args)
+  val num = parseArgs("NUM", args)
   
   val s = (board match {
     case "sim"    => Nil
@@ -63,7 +64,7 @@ object TopMain extends App {
       println(f + " = " + v)
   }
 
-  CFG.generate()
+  CFG.generate(num)
 
   if (board == "sim") {
     Driver.execute(args, () => new NutShellSimTop)

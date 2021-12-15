@@ -48,6 +48,8 @@ class NutShell(implicit val p: NutCoreConfig) extends Module with HasSoCParamete
     val frontend = Flipped(new AXI4)
     val meip = Input(UInt(Settings.getInt("NrExtIntr").W))
     val ila = if (p.FPGAPlatform && EnableILA) Some(Output(new ILABundle)) else None
+
+    val cfi = new CFIIoTIO
   })
 
   val nutcore = Module(new NutCore)
@@ -141,4 +143,12 @@ class NutShell(implicit val p: NutCoreConfig) extends Module with HasSoCParamete
     BoringUtilsConnect(ila.WBUrfData  ,"ilaWBUrfData")
     BoringUtilsConnect(ila.InstrCnt   ,"ilaInstrCnt")
   }
+
+  val cfi = Module(new CFI)
+  val cfiReq = WireInit(0.U.asTypeOf(new BPUUpdateReq))
+  BoringUtils.addSink(cfiReq, "bpuUpdateReq")
+  cfi.io.soc.valid := cfiReq.valid && cfiReq.isJalr
+  cfi.io.soc.srcAddr := cfiReq.pc
+  cfi.io.soc.dstAddr := cfiReq.actualTarget
+  cfi.io.iot <> io.cfi
 }

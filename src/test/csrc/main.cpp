@@ -92,20 +92,8 @@ int main(int argc, const char** argv) {
     }
     insert(p);
   }
-  // while(!feof(fp)) {
-  //   printf("=====\n");
-  //   cfglink p = make_node(0, 0);
-  //   fscanf(fp, "%lx", &p->src);
-  //   printf("src : %lx\n", p->src);
-  //   fscanf(fp, "%d", &p->destNum);
-  //   for(int i = 0; i < p->destNum; i++) {
-  //     fscanf(fp, "%lx", &p->dest[i]);
-  //   }
-  //   insert(p);
-  // }
-
   traverse();
-  // exit(1);
+
   auto emu = Emulator(argc, argv);
 
   get_sc_time_stamp = [&emu]() -> double {
