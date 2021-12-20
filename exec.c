@@ -31,31 +31,31 @@ int main(void)
     if(pidA == 0) {
         printf("son process A pid is %d, father process os %d\n", getpid(), getppid());
         execlp("make", "make", "emu", "IMAGE=./ready-to-run/microbench-riscv64-nutshell.bin", "NUM=one", NULL);
-        close(fd_AWBR[0]);
-        close(fd_ARBW[1]);
-        uint8_t matA[2][2] = {{0, 1}, {2, 3}};
-        uint8_t req;
-        int n = read(fd_ARBW[0], &req, 1);
-        if(req == 1){
-            write(fd_AWBR[1], matA, sizeof(matA));
-        }
+        // close(fd_AWBR[0]);
+        // close(fd_ARBW[1]);
+        // uint8_t matA[2][2] = {{0, 1}, {2, 3}};
+        // uint8_t req;
+        // int n = read(fd_ARBW[0], &req, 1);
+        // if(req == 1){
+        //     write(fd_AWBR[1], matA, sizeof(matA));
+        // }
         // write(fd[1], "hello wwy\n", sizeof("hello wwy\n"));
     }
     if(pidB == 0) {
         printf("son process B pid is %d, father process os %d\n", getpid(), getppid());
         execlp("make", "make", "emu", "IMAGE=./ready-to-run/microbench-riscv64-nutshell.bin", "NUM=two", NULL);
-        close(fd_AWBR[1]);
-        close(fd_ARBW[0]);
-        uint8_t matB[2][2];
-        uint8_t req = 1;
-        write(fd_ARBW[1], &req, 1);
-        int n = read(fd_AWBR[0], matB, sizeof(matB));
-        for(int i = 0; i < 2; i++) {
-            for(int j = 0; j < 2; j++) {
-                printf("%d ",matB[i][j]);
-            }
-            printf("\n");
-        }
+        // close(fd_AWBR[1]);
+        // close(fd_ARBW[0]);
+        // uint8_t matB[2][2];
+        // uint8_t req = 1;
+        // write(fd_ARBW[1], &req, 1);
+        // int n = read(fd_AWBR[0], matB, sizeof(matB));
+        // for(int i = 0; i < 2; i++) {
+        //     for(int j = 0; j < 2; j++) {
+        //         printf("%d ",matB[i][j]);
+        //     }
+        //     printf("\n");
+        // }
     }
 
     if(pidA > 0 && pidB > 0) {

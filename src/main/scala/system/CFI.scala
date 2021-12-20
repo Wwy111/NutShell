@@ -82,10 +82,6 @@ class CFI extends NutCoreModule {
     }
   }
 
-//  def keyMap[T <: Mem](i: UInt, mem: T) = {
-//    mem.read(i)  -> i
-//  }
-
   // soc cfi lookup
   val socSrcIndex = MuxLookup(io.soc.srcAddr, 0x10.U, (0 to srcNum-1).map(i => (srcMem.read(i.U) -> i.U)).toSeq)
   val socDstIndex = WireInit(0.U(5.W))
@@ -152,4 +148,5 @@ class CFI extends NutCoreModule {
       }
     }
   }
+
 }

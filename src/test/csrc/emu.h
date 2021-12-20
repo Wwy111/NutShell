@@ -96,6 +96,23 @@ class Emulator {
   void cfi_check(void) {
     int i;
 
+    if(dut_ptr->io_difftest_thisPC == 0x80000004 || dut_ptr->io_difftest_thisPC == 0x800046c0) {     // device 2 request tu device 1
+      dut_ptr->io_cfi_in_valid = 1;
+      dut_ptr->io_cfi_in_id = 4;
+      dut_ptr->io_cfi_in_cmd = 3;
+      dut_ptr->io_cfi_in_srcAddr = 0x80004c28;
+      dut_ptr->io_cfi_in_dstAddr = 0x80004e30;
+      printf("pc is %lx\n", dut_ptr->io_difftest_thisPC);
+      return;
+    }
+
+    if(dut_ptr->io_cfi_out_valid == 1 && dut_ptr->io_cfi_out_id == 4) {
+      dut_ptr->io_cfi_in_valid = 0;
+      printf("cmd : %d\n", dut_ptr->io_cfi_out_cmd);
+      printf("src : %lx, dst : %lx\n", dut_ptr->io_cfi_out_srcAddr, dut_ptr->io_cfi_out_dstAddr);
+      return;
+    }
+
     if(dut_ptr->io_cfi_out_valid == 0) {
       dut_ptr->io_cfi_in_valid = 0;
       return;
