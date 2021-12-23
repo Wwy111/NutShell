@@ -403,8 +403,8 @@ class BPU_inorder extends NutCoreModule {
 
   val cfiValid = WireInit(true.B)
   BoringUtils.addSink(cfiValid, "cfiValid")
-  when (req.valid && cfiValid) {
-    when (req.fuOpType === ALUOpType.call)  {
+  when (req.valid) {
+    when (req.fuOpType === ALUOpType.call && cfiValid)  {
       ras.write(sp.value + 1.U, Mux(req.isRVC, req.pc + 2.U, req.pc + 4.U))
       // raBrIdxs.write(sp.value + 1.U, Mux(req.pc(1), 2.U, 1.U))
       sp.value := sp.value + 1.U
@@ -419,9 +419,9 @@ class BPU_inorder extends NutCoreModule {
 
   when (req.valid) {
     when (req.fuOpType === ALUOpType.ret && req.actualTarget =/= ras.read(sp.value)) {
-      printf("!!!!!!!!!!return mismatch, pc is %x!!!!!!!!!\n", io.in.pc.bits)
-      printf("return address is %x, shadow stack is %x\n", req.actualTarget, ras.read(sp.value))
-      printf("shadow stack is %x\n%x\n%x\n%x\n", ras.read(1.U), ras.read(2.U), ras.read(3.U), ras.read(4.U))
+      printf("!!!!!!!!!!return mismatch, pc is %x!!!!!!!!!\n", req.pc)
+      printf("return address is %x, shadow stack is %x, sp is %d\n", req.actualTarget, ras.read(sp.value), sp.value)
+      printf("shadow stack is \n%x\n%x\n%x\n%x\n%x\n%x\n%x\n", ras.read(1.U), ras.read(2.U), ras.read(3.U), ras.read(4.U), ras.read(5.U), ras.read(6.U), ras.read(7.U))
     }
   }
 

@@ -144,7 +144,7 @@ class ALU(hasBru: Boolean = false) extends NutCoreModule {
   val cfiValid = WireInit(true.B)
   BoringUtils.addSink(cfiValid, "cfiValid")
 
-  io.in.ready := io.out.ready
+  io.in.ready := io.out.ready && cfiValid
   io.out.valid := valid && cfiValid
 
   val bpuUpdateReq = WireInit(0.U.asTypeOf(new BPUUpdateReq))

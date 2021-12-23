@@ -115,16 +115,16 @@ object CFG {
   val srcArray = new Array[Long](16)
   val destArray = Array.ofDim[Long](16, 16)
   val cfgID = new Array[Byte](1)
-  def generate(num: String) = {
+  def generate(ID: String) = {
 
 //    val file = Source.fromFile("/home/wwy/cfg.txt")
-    val file = (num match {
-      case "one"    => Source.fromFile("/home/wwy/cfg1.txt")
-      case "two"    => Source.fromFile("/home/wwy/cfg2.txt")
+    val file = (ID match {
+      case "1"    => Source.fromFile("/home/wwy/cfi/cfg1.txt")
+      case "2"    => Source.fromFile("/home/wwy/cfi/cfg2.txt")
     })
-    cfgID(0) = (num match {
-      case "one"    => 1
-      case "two"    => 2
+    cfgID(0) = (ID match {
+      case "1"    => 1
+      case "2"    => 2
     })
     val iter = file.getLines()
     val srcNum = Integer.parseInt(iter.next())

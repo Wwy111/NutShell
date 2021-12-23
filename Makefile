@@ -14,16 +14,16 @@ IMAGE ?= ready-to-run/linux.bin
 DATAWIDTH ?= 64
 BOARD ?= sim  # sim  pynq  axu3cg
 CORE  ?= inorder  # inorder  ooo  embedded
-NUM   ?= one
+ID   ?= 1
 
 .DEFAULT_GOAL = verilog
 
 help:
-	mill chiselModule.runMain top.$(TOP) --help BOARD=$(BOARD) CORE=$(CORE) NUM=$(NUM)
+	mill chiselModule.runMain top.$(TOP) --help BOARD=$(BOARD) CORE=$(CORE) ID=$(ID)
 
 $(TOP_V): $(SCALA_FILE)
 	mkdir -p $(@D)
-	mill chiselModule.runMain top.$(TOP) -td $(@D) --output-file $(@F) --infer-rw $(FPGATOP) --repl-seq-mem -c:$(FPGATOP):-o:$(@D)/$(@F).conf BOARD=$(BOARD) CORE=$(CORE) NUM=$(NUM)
+	mill chiselModule.runMain top.$(TOP) -td $(@D) --output-file $(@F) --infer-rw $(FPGATOP) --repl-seq-mem -c:$(FPGATOP):-o:$(@D)/$(@F).conf BOARD=$(BOARD) CORE=$(CORE) ID=$(ID)
 	$(MEM_GEN) $(@D)/$(@F).conf >> $@
 	sed -i -e 's/_\(aw\|ar\|w\|r\|b\)_\(\|bits_\)/_\1/g' $@
 	@git log -n 1 >> .__head__
@@ -48,7 +48,7 @@ SIM_TOP = NutShellSimTop
 SIM_TOP_V = $(BUILD_DIR)/$(SIM_TOP).v
 $(SIM_TOP_V): $(SCALA_FILE) $(TEST_FILE)
 	mkdir -p $(@D)
-	mill chiselModule.test.runMain $(SIMTOP) -td $(@D) --output-file $(@F) BOARD=sim CORE=$(CORE) NUM=$(NUM)
+	mill chiselModule.test.runMain $(SIMTOP) -td $(@D) --output-file $(@F) BOARD=sim CORE=$(CORE) ID=$(ID)
 
 
 EMU_CSRC_DIR = $(abspath ./src/test/csrc)
@@ -104,7 +104,7 @@ LOG_END ?= 0
 LOG_LEVEL ?= ALL
 
 emu: $(EMU)
-	@$(EMU) -i $(IMAGE) $(SEED) -b $(LOG_BEGIN) -e $(LOG_END) -v $(LOG_LEVEL)
+	 $(EMU) -i $(IMAGE) $(SEED) -b $(LOG_BEGIN) -e $(LOG_END) -v $(LOG_LEVEL) -z $(ID)
 
 cache:
 	$(MAKE) emu IMAGE=Makefile

@@ -25,6 +25,7 @@ const struct option Emulator::long_options[] = {
   { "log-begin",      1, NULL, 'b' },
   { "log-end",        1, NULL, 'e' },
   { "verbose",        1, NULL, 'v' },
+  { "id",             1, NULL, 'z' },
   { "help",           0, NULL, 'h' },
   { 0,                0, NULL,  0  }
 };
@@ -38,6 +39,7 @@ void Emulator::print_help(const char *file) {
   printf("  -b, --log-begin=NUM   display log from NUM th cycle\n");
   printf("  -e, --log-end=NUM     stop display log at NUM th cycle\n");
   printf("  -v, --verbose=STR     verbosity level, can be one of [ALL, DEBUG, INFO, WARN, ERROR]\n");
+  printf("  -z, --id=ID\n");
   printf("  -h, --help            print program help info\n");
   printf("\n");
 }
@@ -45,7 +47,7 @@ void Emulator::print_help(const char *file) {
 std::vector<const char *> Emulator::parse_args(int argc, const char *argv[]) {
   std::vector<const char *> args = { argv[0] };
   int o;
-  while ( (o = getopt_long(argc, const_cast<char *const*>(argv), "-s:C:hi:m:b:e:v:", long_options, NULL)) != -1) {
+  while ( (o = getopt_long(argc, const_cast<char *const*>(argv), "-s:C:hi:m:b:e:v:z:", long_options, NULL)) != -1) {
     switch (o) {
       case 's': 
         if(std::string(optarg) != "NO_SEED") {
@@ -61,6 +63,7 @@ std::vector<const char *> Emulator::parse_args(int argc, const char *argv[]) {
       case 'b': log_begin = atoll(optarg);  break;
       case 'e': log_end = atoll(optarg); break;
       case 'v': log_level = getLogLevel(optarg); break;
+      case 'z': id = atoll(optarg); break;
       default:
                 print_help(argv[0]);
                 exit(0);
@@ -75,7 +78,7 @@ int main(int argc, const char** argv) {
   FILE *fp;
   int srcNum;
   
-  if ((fp = fopen("/home/wwy/cfg.txt", "r")) == NULL) {
+  if ((fp = fopen("/home/wwy/cfi/cfg.txt", "r")) == NULL) {
 		printf("error open file!\n");
 		exit(1);
 	}
@@ -93,6 +96,7 @@ int main(int argc, const char** argv) {
     insert(p);
   }
   traverse();
+  fclose(fp);
 
   auto emu = Emulator(argc, argv);
 

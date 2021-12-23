@@ -95,16 +95,23 @@ class CFI extends NutCoreModule {
   val cfivalid = (socHit || patch) && (!halt)
   BoringUtils.addSource(cfivalid, "cfiValid")
 
+
+  val timerOverflow = 0x100000
+  val timer = Counter(timerOverflow)
   when(!socHit) {
     io.iot.out.valid := true.B
     io.iot.out.id := selfID
     io.iot.out.cmd := CFICmdType.lookupIoT
     io.iot.out.srcAddr := io.soc.srcAddr
     io.iot.out.dstAddr := io.soc.dstAddr
-    printf("\nID : %d jalr wrong\n", selfID)
-    printf("src is %x, dest is %x\n", io.soc.srcAddr, io.soc.dstAddr)
+//    printf("\nID : %d jalr wrong\n", selfID)
+//    printf("src is %x, dest is %x\n", io.soc.srcAddr, io.soc.dstAddr)
     when(halt) {
+      timer.value := 0.U
       printf("\nhalt!!!\n")
+    }
+    when(timer.value =/= (timerOverflow-1).U) {
+      timer.value := timer.value + 1.U
     }
   }
 
@@ -117,14 +124,18 @@ class CFI extends NutCoreModule {
         dstSp(i).value := dstSp(i).value - 1.U
       }
     }
+    timer.value := 0.U
   }
 
-  when(lookupFail) {
+  when(lookupFail || timer.value === (timerOverflow-1).U) {
     io.iot.out.valid := true.B
     io.iot.out.id := selfID
     io.iot.out.cmd := CFICmdType.lookupCloud
     io.iot.out.srcAddr := io.soc.srcAddr
     io.iot.out.dstAddr := io.soc.dstAddr
+    when(lookupFail) {
+      timer.value := 0.U
+    }
   }
 
 

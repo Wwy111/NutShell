@@ -4,6 +4,9 @@
 #include <iomanip>
 #include <fstream>
 #include <vector>
+#include <stdlib.h>
+#include <stdio.h>
+#include <string.h>
 #include "difftest.h"
 
 //#include "VSimTop__Dpi.h"
@@ -26,6 +29,7 @@ class Emulator {
   uint32_t seed;
   uint64_t max_cycles, cycles;
   uint64_t log_begin, log_end, log_level;
+  uint64_t  id;
 
   std::vector<const char *> parse_args(int argc, const char *argv[]);
 
@@ -55,10 +59,11 @@ class Emulator {
     image(nullptr),
     dut_ptr(new std::remove_reference<decltype(*dut_ptr)>::type),
     seed(0), max_cycles(-1), cycles(0),
-    log_begin(0), log_end(-1), log_level(LOG_ALL)
+    log_begin(0), log_end(-1), log_level(LOG_ALL), id(0)
   {
     // init emu
     auto args = parse_args(argc, argv);
+    printf("id : %d\n", id);
 
     // srand
     srand(seed);
@@ -121,6 +126,8 @@ class Emulator {
       dut_ptr->io_cfi_in_valid = 1;
 
       if(dut_ptr->io_cfi_out_cmd == 3){         // lookupIoT
+        dut_ptr->io_cfi_in_valid = 0;
+
         dut_ptr->io_cfi_in_id = dut_ptr->io_cfi_out_id;
         dut_ptr->io_cfi_in_cmd = 1;             // lookupfail
         return;
@@ -145,8 +152,186 @@ class Emulator {
     }
   }
 
+  void cfi_check_file() {
+    FILE *fp1, *fp2, *fp3, *fp4;
+    const char cfi_1_req[30]  = "/home/wwy/cfi/cfi_1_req.txt";
+    const char cfi_1_resp[30] = "/home/wwy/cfi/cfi_1_resp.txt";
+    const char cfi_2_req[30]  = "/home/wwy/cfi/cfi_2_req.txt";
+    const char cfi_2_resp[30] = "/home/wwy/cfi/cfi_2_resp.txt";
+
+    static uint8_t  last_valid;
+    static uint64_t last_cmd;
+
+    if(id == 1) {
+      if(dut_ptr->io_cfi_out_valid == 1 && (last_cmd != dut_ptr->io_cfi_out_cmd || last_valid == 0)) {      
+        if(dut_ptr->io_cfi_out_id == id) {          // req
+          if ((fp1 = fopen(cfi_1_req, "w")) == NULL) {
+		        printf("error open /home/wwy/cfi/cfi_1_req.txt!\n");
+		        exit(1);
+	        }
+          fprintf(fp1, "VALID\n");
+          fprintf(fp1, "%d\n", dut_ptr->io_cfi_out_valid);
+          fprintf(fp1, "%d\n", dut_ptr->io_cfi_out_id);
+          fprintf(fp1, "%d\n", dut_ptr->io_cfi_out_cmd);
+          fprintf(fp1, "%lx\n", dut_ptr->io_cfi_out_srcAddr);
+          fprintf(fp1, "%lx\n", dut_ptr->io_cfi_out_dstAddr);
+          
+          fclose(fp1);
+        }
+        else if(dut_ptr->io_cfi_out_id != id) {     // resp to 2
+          if ((fp4 = fopen(cfi_2_resp, "w")) == NULL) {
+		        printf("error open /home/wwy/cfi/cfi_2_resp.txt!\n");
+		        exit(1);
+	        }
+          fprintf(fp4, "VALID\n");
+          fprintf(fp4, "%d\n", dut_ptr->io_cfi_out_valid);
+          fprintf(fp4, "%d\n", dut_ptr->io_cfi_out_id);
+          fprintf(fp4, "%d\n", dut_ptr->io_cfi_out_cmd);
+          fprintf(fp4, "%lx\n", dut_ptr->io_cfi_out_srcAddr);
+          fprintf(fp4, "%lx\n", dut_ptr->io_cfi_out_dstAddr);
+          
+          fclose(fp4);
+        }
+      }
+      if ((fp2 = fopen(cfi_1_resp, "r")) == NULL) {
+		    printf("error open /home/wwy/cfi/cfi_1_resp.txt!\n");
+		    exit(1);
+	    }
+      if ((fp3 = fopen(cfi_2_req, "r")) == NULL) {
+		    printf("error open /home/wwy/cfi/cfi_2_req.txt!\n");
+		    exit(1);
+	    }
+      char valid_1_resp[10], valid_2_req[10];
+      fscanf(fp2, "%s", valid_1_resp);
+      fscanf(fp3, "%s", valid_2_req);
+      if(strcmp(valid_1_resp, "VALID") == 0) {    // if both valid, process resp
+        fscanf(fp2, "%d", &dut_ptr->io_cfi_in_valid);
+        fscanf(fp2, "%d", &dut_ptr->io_cfi_in_id);
+        fscanf(fp2, "%d", &dut_ptr->io_cfi_in_cmd);
+        fscanf(fp2, "%lx", &dut_ptr->io_cfi_in_srcAddr);
+        fscanf(fp2, "%lx", &dut_ptr->io_cfi_in_dstAddr);
+        
+        fclose(fp2);
+        fclose(fp3);
+        if ((fp2 = fopen(cfi_1_resp, "w")) == NULL) {                     // clear
+		      printf("error open /home/wwy/cfi/cfi_1_resp.txt!\n");
+		      exit(1);
+	      }
+        fclose(fp2);
+      }
+      else if(strcmp(valid_2_req, "VALID") == 0) {
+        fscanf(fp3, "%d", &dut_ptr->io_cfi_in_valid);
+        fscanf(fp3, "%d", &dut_ptr->io_cfi_in_id);
+        fscanf(fp3, "%d", &dut_ptr->io_cfi_in_cmd);
+        fscanf(fp3, "%lx", &dut_ptr->io_cfi_in_srcAddr);
+        fscanf(fp3, "%lx", &dut_ptr->io_cfi_in_dstAddr);
+        
+        fclose(fp2);
+        fclose(fp3);
+        if(dut_ptr->io_cfi_in_cmd == 3) {
+          if ((fp3 = fopen(cfi_2_req, "w")) == NULL) {                     // clear
+		        printf("error open /home/wwy/cfi/cfi_2_req.txt!\n");
+		        exit(1);
+	        }
+          fclose(fp3);
+        }
+      }
+      else {
+        dut_ptr->io_cfi_in_valid = 0;
+        fclose(fp2);
+        fclose(fp3);
+      }
+    }
+    else if(id == 2) {
+      if(dut_ptr->io_cfi_out_valid == 1 && (last_cmd != dut_ptr->io_cfi_out_cmd || last_valid == 0)) {      
+        if(dut_ptr->io_cfi_out_id == id) {                     // req
+          if ((fp3 = fopen(cfi_2_req, "w")) == NULL) {
+		        printf("error open /home/wwy/cfi/cfi_2_req.txt!\n");
+		        exit(1);
+	        }
+          fprintf(fp3, "VALID\n");
+          fprintf(fp3, "%d\n", dut_ptr->io_cfi_out_valid);
+          fprintf(fp3, "%d\n", dut_ptr->io_cfi_out_id);
+          fprintf(fp3, "%d\n", dut_ptr->io_cfi_out_cmd);
+          fprintf(fp3, "%lx\n", dut_ptr->io_cfi_out_srcAddr);
+          fprintf(fp3, "%lx\n", dut_ptr->io_cfi_out_dstAddr);
+          
+          fclose(fp3);
+        }
+        else if(dut_ptr->io_cfi_out_id != id) {     // resp to 2
+          if ((fp2 = fopen(cfi_1_resp, "w")) == NULL) {
+		        printf("error open /home/wwy/cfi/cfi_1_resp.txt!\n");
+		        exit(1);
+	        }
+          fprintf(fp2, "VALID\n");
+          fprintf(fp2, "%d\n", dut_ptr->io_cfi_out_valid);
+          fprintf(fp2, "%d\n", dut_ptr->io_cfi_out_id);
+          fprintf(fp2, "%d\n", dut_ptr->io_cfi_out_cmd);
+          fprintf(fp2, "%lx\n", dut_ptr->io_cfi_out_srcAddr);
+          fprintf(fp2, "%lx\n", dut_ptr->io_cfi_out_dstAddr);
+          
+          fclose(fp2);
+        }
+      }
+      if ((fp4 = fopen(cfi_2_resp, "r")) == NULL) {
+		    printf("error open /home/wwy/cfi/cfi_2_resp.txt!\n");
+		    exit(1);
+	    }
+      if ((fp1 = fopen(cfi_1_req, "r")) == NULL) {
+		    printf("error open /home/wwy/cfi/cfi_1_req.txt!\n");
+		    exit(1);
+	    }
+      char valid_2_resp[10], valid_1_req[10];
+      fscanf(fp4, "%s", valid_2_resp);
+      fscanf(fp1, "%s", valid_1_req);
+      if(strcmp(valid_2_resp, "VALID") == 0) {    // if both valid, process resp
+        fscanf(fp4, "%d", &dut_ptr->io_cfi_in_valid);
+        fscanf(fp4, "%d", &dut_ptr->io_cfi_in_id);
+        fscanf(fp4, "%d", &dut_ptr->io_cfi_in_cmd);
+        fscanf(fp4, "%lx", &dut_ptr->io_cfi_in_srcAddr);
+        fscanf(fp4, "%lx", &dut_ptr->io_cfi_in_dstAddr);
+        
+        fclose(fp4);
+        fclose(fp1);
+        if ((fp4 = fopen(cfi_2_resp, "w")) == NULL) {                     // clear
+		      printf("error open /home/wwy/cfi/cfi_2_resp.txt!\n");
+		      exit(1);
+	      }
+        fclose(fp4);
+      }
+      else if(strcmp(valid_1_req, "VALID") == 0) {
+        fscanf(fp1, "%d", &dut_ptr->io_cfi_in_valid);
+        fscanf(fp1, "%d", &dut_ptr->io_cfi_in_id);
+        fscanf(fp1, "%d", &dut_ptr->io_cfi_in_cmd);
+        fscanf(fp1, "%lx", &dut_ptr->io_cfi_in_srcAddr);
+        fscanf(fp1, "%lx", &dut_ptr->io_cfi_in_dstAddr);
+        
+        fclose(fp4);
+        fclose(fp1);
+        if(dut_ptr->io_cfi_in_cmd == 3) {
+          if ((fp1 = fopen(cfi_1_req, "w")) == NULL) {                     // clear
+		        printf("error open /home/wwy/cfi/cfi_1_req.txt!\n");
+		        exit(1);
+	        }
+          fclose(fp1);
+        }
+      }
+      else {
+        dut_ptr->io_cfi_in_valid = 0;
+        fclose(fp4);
+        fclose(fp1);
+      }
+    }
+
+    last_valid = dut_ptr->io_cfi_out_valid;
+    last_cmd = dut_ptr->io_cfi_out_cmd;
+  }
+
   void single_cycle() {
-    cfi_check();
+    if(dut_ptr->io_difftest_thisPC > 0x80000010) {
+      cfi_check_file();
+    }
+    // cfi_check();
     dut_ptr->clock = 0;
     dut_ptr->eval();
 
@@ -186,15 +371,15 @@ class Emulator {
       single_cycle();
       n --;
 
-      if (lastcommit - n > stuck_limit && hascommit) {
-        eprintf("No instruction commits for %d cycles, maybe get stuck\n"
-            "(please also check whether a fence.i instruction requires more than %d cycles to flush the icache)\n",
-            stuck_limit, stuck_limit);
-#if VM_TRACE
-        tfp->close();
-#endif
-        set_abort();
-      }
+//       if (lastcommit - n > stuck_limit && hascommit) {
+//         eprintf("No instruction commits for %d cycles, maybe get stuck\n"
+//             "(please also check whether a fence.i instruction requires more than %d cycles to flush the icache)\n",
+//             stuck_limit, stuck_limit);
+// #if VM_TRACE
+//         tfp->close();
+// #endif
+//         set_abort();
+//       }
 
       if (!hascommit && (uint32_t)dut_ptr->io_difftest_thisPC == 0x80000000) {
         hascommit = 1;

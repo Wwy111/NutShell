@@ -108,6 +108,7 @@ class EXU(implicit val p: NutCoreConfig) extends NutCoreModule {
 
   // FIXME: should handle io.out.ready == false
   io.out.valid := io.in.valid && MuxLookup(fuType, true.B, List(
+    FuType.alu -> alu.io.out.valid,
     FuType.lsu -> lsu.io.out.valid,
     FuType.mdu -> mdu.io.out.valid,
     FuType.comu -> mdu.io.out.valid
