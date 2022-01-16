@@ -52,6 +52,8 @@ class CFI extends NutCoreModule {
   val (valid, id, cmd, srcAddr, dstAddr) = (io.iot.in.valid, io.iot.in.id, io.iot.in.cmd, io.iot.in.srcAddr, io.iot.in.dstAddr)
   val selfID = CFG.getCFDID().U
 
+  val cfiOn = false
+
   val srcNum = 16
   val dstNum = 16
   val srcMem = Mem(srcNum, UInt(VAddrBits.W))
@@ -92,8 +94,15 @@ class CFI extends NutCoreModule {
   }
 
   val socHit = (!io.soc.valid) || (socSrcIndex =/= 0x10.U && socDstIndex =/= 0x10.U)
-  val cfivalid = (socHit || patch) && (!halt)
-  BoringUtils.addSource(cfivalid, "cfiValid")
+  val cfiValid = Wire(Bool())
+  if(cfiOn) {
+    cfiValid := (socHit || patch) && (!halt)
+  }
+  else {
+    cfiValid := true.B
+  }
+//  val cfivalid = (socHit || patch) && (!halt)
+  BoringUtils.addSource(cfiValid, "cfiValid")
 
 
   val timerOverflow = 0x100000
