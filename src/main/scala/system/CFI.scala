@@ -52,7 +52,7 @@ class CFI extends NutCoreModule {
   val (valid, id, cmd, srcAddr, dstAddr) = (io.iot.in.valid, io.iot.in.id, io.iot.in.cmd, io.iot.in.srcAddr, io.iot.in.dstAddr)
   val selfID = CFG.getCFDID().U
 
-  val cfiOn = false
+  val cfiOn = true
 
   val srcNum = 16
   val dstNum = 16

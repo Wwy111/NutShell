@@ -121,10 +121,12 @@ object CFG {
     val file = (ID match {
       case "1"    => Source.fromFile("/home/wwy/cfi/cfg1.txt")
       case "2"    => Source.fromFile("/home/wwy/cfi/cfg2.txt")
+      case "3"    => Source.fromFile("/home/wwy/cfi/cfg3.txt")
     })
     cfgID(0) = (ID match {
       case "1"    => 1
       case "2"    => 2
+      case "3"    => 3
     })
     val iter = file.getLines()
     val srcNum = Integer.parseInt(iter.next())
