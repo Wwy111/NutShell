@@ -117,7 +117,7 @@ class CFI extends NutCoreModule {
 //    printf("src is %x, dest is %x\n", io.soc.srcAddr, io.soc.dstAddr)
     when(halt) {
       timer.value := 0.U
-      printf("\nhalt!!!\n")
+//      printf("\nhalt!!!\n")
     }
     when(timer.value =/= (timerOverflow-1).U) {
       timer.value := timer.value + 1.U
