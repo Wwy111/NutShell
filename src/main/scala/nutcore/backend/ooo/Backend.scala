@@ -19,9 +19,9 @@ package nutcore
 import chisel3._
 import chisel3.util._
 import chisel3.util.experimental.BoringUtils
-
 import utils._
 import bus.simplebus._
+import system.CFIIoTIO
 
 trait HasBackendConst{
   // val multiIssue = true
@@ -671,11 +671,15 @@ class Backend_inorder(implicit val p: NutCoreConfig) extends NutCoreModule {
     val memMMU = Flipped(new MemMMUIO)
 
     val redirect = new RedirectIO
+
+    val cfi = new CFIIoTIO
   })
 
   val isu  = Module(new ISU)
   val exu  = Module(new EXU)
   val wbu  = Module(new WBU)
+
+  io.cfi <> wbu.io.cfi
 
   PipelineConnect(isu.io.out, exu.io.in, exu.io.out.fire(), io.flush(0))
   PipelineConnect(exu.io.out, wbu.io.in, true.B, io.flush(1))

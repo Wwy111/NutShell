@@ -19,9 +19,9 @@ package nutcore
 import chisel3._
 import chisel3.util._
 import chisel3.util.experimental.BoringUtils
-
 import bus.simplebus._
 import bus.axi4._
+import system.CFIIoTIO
 import utils._
 import top.Settings
 
@@ -93,6 +93,8 @@ class NutCore(implicit val p: NutCoreConfig) extends NutCoreModule {
     val dmem = new SimpleBusC
     val mmio = new SimpleBusUC
     val frontend = Flipped(new SimpleBusUC())
+
+    val cfi = new CFIIoTIO
   })
 
   // Frontend
@@ -139,6 +141,7 @@ class NutCore(implicit val p: NutCoreConfig) extends NutCoreModule {
     dmemXbar.io.in(0) <> expender.io.out
 
     io.mmio <> mmioXbar.io.out
+    io.cfi <> DontCare
 
   } else {
     val backend = Module(new Backend_inorder)
@@ -165,6 +168,7 @@ class NutCore(implicit val p: NutCoreConfig) extends NutCoreModule {
     dmemXbar.io.in(3) <> io.frontend
 
     io.mmio <> mmioXbar.io.out
+    io.cfi <> backend.io.cfi
   }
 
   Debug("------------------------ BACKEND ------------------------\n")

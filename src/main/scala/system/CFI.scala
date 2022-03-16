@@ -44,6 +44,7 @@ class CFIIO extends NutCoreBundle {
   }
 
   val iot = new CFIIoTIO
+  val cfiValid = Output(Bool())
 }
 @chiselName
 class CFI extends NutCoreModule {
@@ -101,11 +102,10 @@ class CFI extends NutCoreModule {
   else {
     cfiValid := true.B
   }
-//  val cfivalid = (socHit || patch) && (!halt)
-  BoringUtils.addSource(cfiValid, "cfiValid")
 
+  io.cfiValid := cfiValid
 
-  val timerOverflow = 0x100000
+  val timerOverflow = 0x10000
   val timer = Counter(timerOverflow)
   when(!socHit) {
     io.iot.out.valid := true.B

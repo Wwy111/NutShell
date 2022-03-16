@@ -141,11 +141,8 @@ class ALU(hasBru: Boolean = false) extends NutCoreModule {
 
   Debug(valid && isBru, " bpuUpdateReq: valid:%d pc:%x isMissPredict:%d actualTarget:%x actualTaken:%x fuOpType:%x btbType:%x isRVC:%d \n", valid && isBru, io.cfIn.pc, predictWrong, target, taken, func, LookupTree(func, RV32I_BRUInstr.bruFuncTobtbTypeTable), isRVC)
 
-  val cfiValid = WireInit(true.B)
-  BoringUtils.addSink(cfiValid, "cfiValid")
-
-  io.in.ready := io.out.ready && cfiValid
-  io.out.valid := valid && cfiValid
+  io.in.ready := io.out.ready
+  io.out.valid := valid
 
   val bpuUpdateReq = WireInit(0.U.asTypeOf(new BPUUpdateReq))
   bpuUpdateReq.valid := valid && isBru
@@ -159,7 +156,7 @@ class ALU(hasBru: Boolean = false) extends NutCoreModule {
   bpuUpdateReq.isJalr := (io.cfIn.instr(6, 0) === "b1100111".U) && (func =/= ALUOpType.ret)
 
   if(hasBru){
-    BoringUtils.addSource(RegEnable(bpuUpdateReq, cfiValid), "bpuUpdateReq")
+    BoringUtils.addSource(RegNext(bpuUpdateReq), "bpuUpdateReq")
   
     val right = valid && isBru && !predictWrong
     val wrong = valid && isBru && predictWrong

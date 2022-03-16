@@ -19,7 +19,7 @@ package system
 import nutcore._
 import bus.axi4.{AXI4, AXI4Lite}
 import bus.simplebus._
-import device.{AXI4CLINT, AXI4PLIC}
+import device._
 import top.Settings
 
 import chisel3._
@@ -144,11 +144,12 @@ class NutShell(implicit val p: NutCoreConfig) extends Module with HasSoCParamete
     BoringUtilsConnect(ila.InstrCnt   ,"ilaInstrCnt")
   }
 
-  val cfi = Module(new CFI)
-  val cfiReq = WireInit(0.U.asTypeOf(new BPUUpdateReq))
-  BoringUtils.addSink(cfiReq, "bpuUpdateReq")
-  cfi.io.soc.valid := cfiReq.valid && cfiReq.isJalr
-  cfi.io.soc.srcAddr := cfiReq.pc
-  cfi.io.soc.dstAddr := cfiReq.actualTarget
-  cfi.io.iot <> io.cfi
+  io.cfi <> nutcore.io.cfi
+//  val cfi = Module(new CFI)
+//  val cfiReq = WireInit(0.U.asTypeOf(new BPUUpdateReq))
+//  BoringUtils.addSink(cfiReq, "bpuUpdateReq")
+//  cfi.io.soc.valid := cfiReq.valid && cfiReq.isJalr
+//  cfi.io.soc.srcAddr := cfiReq.pc
+//  cfi.io.soc.dstAddr := cfiReq.actualTarget
+//  cfi.io.iot <> io.cfi
 }

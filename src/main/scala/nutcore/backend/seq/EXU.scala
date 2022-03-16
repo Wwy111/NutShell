@@ -92,6 +92,7 @@ class EXU(implicit val p: NutCoreConfig) extends NutCoreModule {
 //  vecu.io.out.ready := true.B
   
   io.out.bits.decode := DontCare
+  io.out.bits.decode.ctrl.fuOpType := io.in.bits.ctrl.fuOpType
   (io.out.bits.decode.ctrl, io.in.bits.ctrl) match { case (o, i) =>
     o.rfWen := i.rfWen && (!lsuTlbPF && !lsu.io.loadAddrMisaligned && !lsu.io.storeAddrMisaligned || !fuValids(FuType.lsu)) && !(csr.io.wenFix && fuValids(FuType.csr))
     o.rfDest := i.rfDest

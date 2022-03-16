@@ -19,6 +19,7 @@ package nutcore
 import chisel3._
 import chisel3.util._
 import chisel3.util.experimental.BoringUtils
+import system.{CFI, CFIIoTIO}
 import utils._
 
 class WBU(implicit val p: NutCoreConfig) extends NutCoreModule{
@@ -26,13 +27,15 @@ class WBU(implicit val p: NutCoreConfig) extends NutCoreModule{
     val in = Flipped(Decoupled(new CommitIO))
     val wb = new WriteBackIO
     val redirect = new RedirectIO
+
+    val cfi = new CFIIoTIO
   })
 
   io.wb.rfWen := io.in.bits.decode.ctrl.rfWen && io.in.valid
   io.wb.rfDest := io.in.bits.decode.ctrl.rfDest
   io.wb.rfData := io.in.bits.commits(io.in.bits.decode.ctrl.fuType)
 
-  io.in.ready := true.B
+//  io.in.ready := true.B
 
   io.redirect := io.in.bits.decode.cf.redirect
   io.redirect.valid := io.in.bits.decode.cf.redirect.valid && io.in.valid
@@ -59,4 +62,38 @@ class WBU(implicit val p: NutCoreConfig) extends NutCoreModule{
     BoringUtils.addSource(io.wb.rfDest, "ilaWBUrfDest")
     BoringUtils.addSource(io.wb.rfData, "ilaWBUrfData")
   }
+
+  val cfi = Module(new CFI)
+  val pre_instr = RegEnable(io.in.bits.decode.cf.instr, (io.in.fire() || (RegNext(!cfi.io.cfiValid) && cfi.io.cfiValid)))
+  val pre_pc = RegEnable(io.in.bits.decode.cf.pc, (io.in.fire() || (RegNext(!cfi.io.cfiValid) && cfi.io.cfiValid)))
+  val last_fuOpType = RegEnable(io.in.bits.decode.ctrl.fuOpType, (io.in.fire() || (RegNext(!cfi.io.cfiValid) && cfi.io.cfiValid)))
+
+  val prepre_instr = RegEnable(pre_instr, io.in.fire())
+  val prepre_pc = RegEnable(pre_pc, io.in.fire())
+
+  val preprepre_instr = RegEnable(prepre_instr, io.in.fire())
+  val preprepre_pc = RegEnable(prepre_pc, io.in.fire())
+
+
+  io.in.ready := cfi.io.cfiValid
+
+  cfi.io.soc.valid := (!(pre_pc === io.in.bits.decode.cf.pc)) && HoldUnless((pre_instr(6, 0) === "b1100111".U) && (last_fuOpType =/= ALUOpType.ret), io.in.valid) && (pre_pc === RegNext(pre_pc) || io.in.bits.decode.cf.pc =/= RegNext(io.in.bits.decode.cf.pc))
+  cfi.io.soc.srcAddr := pre_pc
+  cfi.io.soc.dstAddr := io.in.bits.decode.cf.pc
+  cfi.io.iot <> io.cfi
+
+//  when(RegNext(!cfi.io.cfiValid) && cfi.io.cfiValid) {
+//    printf("this pc : %x\n", io.in.bits.decode.cf.pc)
+//    printf("pre pc : %x\n", pre_pc)
+//    printf("valid : %d\n", io.in.valid)
+//    printf("ready : %d\n", io.in.ready)
+//  }
+//  when(cfi.io.soc.valid) {
+//    printf("preprepre pc : %x, preprepre instr : %x\n", preprepre_pc, preprepre_instr)
+//    printf("prepre pc : %x, prepre instr : %x\n", prepre_pc, prepre_instr)
+//    printf("pre pc : %x, pre instr : %x\n", pre_pc, pre_instr)
+//    printf("this pc : %x, this instr : %x\n", io.in.bits.decode.cf.pc, io.in.bits.decode.cf.instr)
+//  }
+
+
 }
