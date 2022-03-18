@@ -18,15 +18,14 @@ package sim
 
 import system._
 import nutcore.NutCoreConfig
-
 import chisel3._
 import chisel3.util._
 import chisel3.util.experimental.BoringUtils
-
 import bus.axi4._
+import bus.cfi.UartTxPathIO
 import device.AXI4RAM
 import nutcore._
-import utils.GTimer
+import _root_.utils.GTimer
 
 class DiffTestIO extends Bundle {
   val r = Output(Vec(32, UInt(64.W)))
@@ -59,7 +58,8 @@ class NutShellSimTop extends Module {
     val logCtrl = new LogCtrlIO
     val difftestCtrl = new DiffTestCtrlIO
 
-    val cfi = new CFIIoTIO
+//    val cfi = new CFIIoTIO
+    val tx = new UartTxPathIO
   })
 
   lazy val config = NutCoreConfig(FPGAPlatform = false)
@@ -112,5 +112,6 @@ class NutShellSimTop extends Module {
 
   io.difftestCtrl <> mmio.io.difftestCtrl
 
-  io.cfi <> soc.io.cfi
+//  io.cfi <> soc.io.cfi
+  io.tx <> soc.io.tx
 }

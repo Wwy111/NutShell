@@ -21,6 +21,7 @@ import chisel3.util._
 import chisel3.util.experimental.BoringUtils
 import system.{CFI, CFIIoTIO}
 import utils._
+import bus.cfi._
 
 class WBU(implicit val p: NutCoreConfig) extends NutCoreModule{
   val io = IO(new Bundle {
@@ -28,7 +29,9 @@ class WBU(implicit val p: NutCoreConfig) extends NutCoreModule{
     val wb = new WriteBackIO
     val redirect = new RedirectIO
 
-    val cfi = new CFIIoTIO
+//    val cfi = new CFIIoTIO
+    val tx = new UartTxPathIO
+    val rx = new UartRxPathIO
   })
 
   io.wb.rfWen := io.in.bits.decode.ctrl.rfWen && io.in.valid
@@ -77,10 +80,25 @@ class WBU(implicit val p: NutCoreConfig) extends NutCoreModule{
 
   io.in.ready := cfi.io.cfiValid
 
-  cfi.io.soc.valid := (!(pre_pc === io.in.bits.decode.cf.pc)) && HoldUnless((pre_instr(6, 0) === "b1100111".U) && (last_fuOpType =/= ALUOpType.ret), io.in.valid) && (pre_pc === RegNext(pre_pc) || io.in.bits.decode.cf.pc =/= RegNext(io.in.bits.decode.cf.pc))
+  cfi.io.soc.valid := (!(pre_pc === io.in.bits.decode.cf.pc)) && HoldUnless((pre_instr(6, 0) === "b1100111".U) && (last_fuOpType =/= ALUOpType.ret), io.in.valid)
   cfi.io.soc.srcAddr := pre_pc
   cfi.io.soc.dstAddr := io.in.bits.decode.cf.pc
-  cfi.io.iot <> io.cfi
+
+//  cfi.io.iot.in <> DontCare
+  val cfi2uart = Module(new Cfi2UartConverter)
+  cfi2uart.io.in.valid := cfi.io.iot.out.valid
+  cfi2uart.io.in.id := cfi.io.iot.out.id
+  cfi2uart.io.in.cmd := cfi.io.iot.out.cmd
+  cfi2uart.io.in.src := cfi.io.iot.out.srcAddr
+  cfi2uart.io.in.dst := cfi.io.iot.out.dstAddr
+  cfi2uart.io.in.prepresrc := preprepre_pc
+  cfi2uart.io.in.presrc := prepre_pc
+  io.tx <> cfi2uart.io.out
+
+  val uart2cfi = Module(new Uart2CfiConverter)
+  uart2cfi.io.in <> io.rx
+  cfi.io.iot.in <> uart2cfi.io.out
+
 
 //  when(RegNext(!cfi.io.cfiValid) && cfi.io.cfiValid) {
 //    printf("this pc : %x\n", io.in.bits.decode.cf.pc)

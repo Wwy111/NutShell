@@ -100,592 +100,215 @@ class Emulator {
     }
   }
 
-  void cfi_check(void) {
-    int i;
+  // void cfi_check(void) {
+  //   int i;
 
-    if(dut_ptr->io_difftest_thisPC == 0x80000004 || dut_ptr->io_difftest_thisPC == 0x800046c0) {     // device 2 request tu device 1
-      dut_ptr->io_cfi_in_valid = 1;
-      dut_ptr->io_cfi_in_id = 4;
-      dut_ptr->io_cfi_in_cmd = 3;
-      dut_ptr->io_cfi_in_srcAddr = 0x80004c28;
-      dut_ptr->io_cfi_in_dstAddr = 0x80004e30;
-      printf("pc is %lx\n", dut_ptr->io_difftest_thisPC);
-      return;
-    }
+  //   if(dut_ptr->io_difftest_thisPC == 0x80000004 || dut_ptr->io_difftest_thisPC == 0x800046c0) {     // device 2 request tu device 1
+  //     dut_ptr->io_cfi_in_valid = 1;
+  //     dut_ptr->io_cfi_in_id = 4;
+  //     dut_ptr->io_cfi_in_cmd = 3;
+  //     dut_ptr->io_cfi_in_srcAddr = 0x80004c28;
+  //     dut_ptr->io_cfi_in_dstAddr = 0x80004e30;
+  //     printf("pc is %lx\n", dut_ptr->io_difftest_thisPC);
+  //     return;
+  //   }
 
-    if(dut_ptr->io_cfi_out_valid == 1 && dut_ptr->io_cfi_out_id == 4) {
-      dut_ptr->io_cfi_in_valid = 0;
-      printf("cmd : %d\n", dut_ptr->io_cfi_out_cmd);
-      printf("src : %lx, dst : %lx\n", dut_ptr->io_cfi_out_srcAddr, dut_ptr->io_cfi_out_dstAddr);
-      return;
-    }
+  //   if(dut_ptr->io_cfi_out_valid == 1 && dut_ptr->io_cfi_out_id == 4) {
+  //     dut_ptr->io_cfi_in_valid = 0;
+  //     printf("cmd : %d\n", dut_ptr->io_cfi_out_cmd);
+  //     printf("src : %lx, dst : %lx\n", dut_ptr->io_cfi_out_srcAddr, dut_ptr->io_cfi_out_dstAddr);
+  //     return;
+  //   }
 
-    if(dut_ptr->io_cfi_out_valid == 0) {
-      dut_ptr->io_cfi_in_valid = 0;
-      return;
-    }
-    else {
-      dut_ptr->io_cfi_in_valid = 1;
+  //   if(dut_ptr->io_cfi_out_valid == 0) {
+  //     dut_ptr->io_cfi_in_valid = 0;
+  //     return;
+  //   }
+  //   else {
+  //     dut_ptr->io_cfi_in_valid = 1;
 
-      if(dut_ptr->io_cfi_out_cmd == 3){         // lookupIoT
-        dut_ptr->io_cfi_in_valid = 0;
+  //     if(dut_ptr->io_cfi_out_cmd == 3){         // lookupIoT
+  //       dut_ptr->io_cfi_in_valid = 0;
 
-        dut_ptr->io_cfi_in_id = dut_ptr->io_cfi_out_id;
-        dut_ptr->io_cfi_in_cmd = 1;             // lookupfail
-        return;
-      }
-      else if(dut_ptr->io_cfi_out_cmd == 4){    // lookupCloud
-        cfglink p = search(dut_ptr->io_cfi_out_srcAddr);
+  //       dut_ptr->io_cfi_in_id = dut_ptr->io_cfi_out_id;
+  //       dut_ptr->io_cfi_in_cmd = 1;             // lookupfail
+  //       return;
+  //     }
+  //     else if(dut_ptr->io_cfi_out_cmd == 4){    // lookupCloud
+  //       cfglink p = search(dut_ptr->io_cfi_out_srcAddr);
         
-        for(i = 0; i < p->destNum; i++) {
-          if(p->dest[i] == dut_ptr->io_cfi_out_dstAddr) {
-            dut_ptr->io_cfi_in_id = dut_ptr->io_cfi_out_id;
-            dut_ptr->io_cfi_in_cmd = 0;         // patch
-            dut_ptr->io_cfi_in_srcAddr = dut_ptr->io_cfi_out_srcAddr;
-            dut_ptr->io_cfi_in_dstAddr = dut_ptr->io_cfi_out_dstAddr;
-            return;
-          }
-        }
-        if(i == p->destNum) {
-          dut_ptr->io_cfi_in_cmd = 2;
-          return;
-        }
-      }
-    }
-  }
+  //       for(i = 0; i < p->destNum; i++) {
+  //         if(p->dest[i] == dut_ptr->io_cfi_out_dstAddr) {
+  //           dut_ptr->io_cfi_in_id = dut_ptr->io_cfi_out_id;
+  //           dut_ptr->io_cfi_in_cmd = 0;         // patch
+  //           dut_ptr->io_cfi_in_srcAddr = dut_ptr->io_cfi_out_srcAddr;
+  //           dut_ptr->io_cfi_in_dstAddr = dut_ptr->io_cfi_out_dstAddr;
+  //           return;
+  //         }
+  //       }
+  //       if(i == p->destNum) {
+  //         dut_ptr->io_cfi_in_cmd = 2;
+  //         return;
+  //       }
+  //     }
+  //   }
+  // }
 
-  const char *cfi_req_file[DEVICE_NUM] = {"/home/wwy/cfi/cfi_1_req.txt",
-                                          "/home/wwy/cfi/cfi_2_req.txt",
-                                          "/home/wwy/cfi/cfi_3_req.txt"};
-  const char *cfi_resp_file[DEVICE_NUM] = {"/home/wwy/cfi/cfi_1_resp.txt",
-                                           "/home/wwy/cfi/cfi_2_resp.txt",
-                                           "/home/wwy/cfi/cfi_3_resp.txt"};
+  // const char *cfi_req_file[DEVICE_NUM] = {"/home/wwy/cfi/cfi_1_req.txt",
+  //                                         "/home/wwy/cfi/cfi_2_req.txt",
+  //                                         "/home/wwy/cfi/cfi_3_req.txt"};
+  // const char *cfi_resp_file[DEVICE_NUM] = {"/home/wwy/cfi/cfi_1_resp.txt",
+  //                                          "/home/wwy/cfi/cfi_2_resp.txt",
+  //                                          "/home/wwy/cfi/cfi_3_resp.txt"};
 
-  void cfi_write_file(uint64_t write_id, uint8_t re) {     //re 0 : req, 1 : resp 
-    FILE *fp;
+  // void cfi_write_file(uint64_t write_id, uint8_t re) {     //re 0 : req, 1 : resp 
+  //   FILE *fp;
 
-    if(re != 0 && re != 1) {
-      printf("error!!!!!\n");
-      assert(0);
-    }
+  //   if(re != 0 && re != 1) {
+  //     printf("error!!!!!\n");
+  //     assert(0);
+  //   }
 
-    if(re == 0) {
-      if((fp = fopen(cfi_req_file[write_id-1], "w")) == NULL) {
-        printf("error open %s\n", cfi_req_file[write_id-1]);
-        assert(0);
-      }
-    }
-    else {
-      if((fp = fopen(cfi_resp_file[write_id-1], "w")) == NULL) {
-        printf("error open %s\n", cfi_resp_file[write_id-1]);
-        assert(0);
-      }
-    }
+  //   if(re == 0) {
+  //     if((fp = fopen(cfi_req_file[write_id-1], "w")) == NULL) {
+  //       printf("error open %s\n", cfi_req_file[write_id-1]);
+  //       assert(0);
+  //     }
+  //   }
+  //   else {
+  //     if((fp = fopen(cfi_resp_file[write_id-1], "w")) == NULL) {
+  //       printf("error open %s\n", cfi_resp_file[write_id-1]);
+  //       assert(0);
+  //     }
+  //   }
 
 
-    fprintf(fp, "VALID\n");
-    fprintf(fp, "%d\n", dut_ptr->io_cfi_out_valid);
-    fprintf(fp, "%d\n", dut_ptr->io_cfi_out_id);
-    fprintf(fp, "%d\n", dut_ptr->io_cfi_out_cmd);
-    fprintf(fp, "%lx\n", dut_ptr->io_cfi_out_srcAddr);
-    fprintf(fp, "%lx\n", dut_ptr->io_cfi_out_dstAddr);
+  //   fprintf(fp, "VALID\n");
+  //   fprintf(fp, "%d\n", dut_ptr->io_cfi_out_valid);
+  //   fprintf(fp, "%d\n", dut_ptr->io_cfi_out_id);
+  //   fprintf(fp, "%d\n", dut_ptr->io_cfi_out_cmd);
+  //   fprintf(fp, "%lx\n", dut_ptr->io_cfi_out_srcAddr);
+  //   fprintf(fp, "%lx\n", dut_ptr->io_cfi_out_dstAddr);
           
-    fclose(fp);
-  }
+  //   fclose(fp);
+  // }
 
-  bool cfi_read_file(uint64_t read_id, uint8_t re) {   //re 0 : req, 1 : resp 
-    FILE *fp;
-    char VALID[10];
+  // bool cfi_read_file(uint64_t read_id, uint8_t re) {   //re 0 : req, 1 : resp 
+  //   FILE *fp;
+  //   char VALID[10];
 
-    if(re != 0 && re != 1) {
-      printf("error!!!!!\n");
-      assert(0);
-    }
+  //   if(re != 0 && re != 1) {
+  //     printf("error!!!!!\n");
+  //     assert(0);
+  //   }
 
-    if(re == 0) {
-      if((fp = fopen(cfi_req_file[read_id-1], "r")) == NULL) {
-        printf("error open %s\n", cfi_req_file[read_id-1]);
-        assert(0);
-      }
-    }
-    else {
-      if((fp = fopen(cfi_resp_file[read_id-1], "r")) == NULL) {
-        printf("error open %s\n", cfi_resp_file[read_id-1]);
-        assert(0);
-      }
-    }
+  //   if(re == 0) {
+  //     if((fp = fopen(cfi_req_file[read_id-1], "r")) == NULL) {
+  //       printf("error open %s\n", cfi_req_file[read_id-1]);
+  //       assert(0);
+  //     }
+  //   }
+  //   else {
+  //     if((fp = fopen(cfi_resp_file[read_id-1], "r")) == NULL) {
+  //       printf("error open %s\n", cfi_resp_file[read_id-1]);
+  //       assert(0);
+  //     }
+  //   }
 
-    fscanf(fp, "%s", VALID);
-    if(strcmp(VALID, "VALID") == 0) {
-      fscanf(fp, "%d", &dut_ptr->io_cfi_in_valid);
-      fscanf(fp, "%d", &dut_ptr->io_cfi_in_id);
-      fscanf(fp, "%d", &dut_ptr->io_cfi_in_cmd);
-      fscanf(fp, "%lx", &dut_ptr->io_cfi_in_srcAddr);
-      fscanf(fp, "%lx", &dut_ptr->io_cfi_in_dstAddr);
+  //   fscanf(fp, "%s", VALID);
+  //   if(strcmp(VALID, "VALID") == 0) {
+  //     fscanf(fp, "%d", &dut_ptr->io_cfi_in_valid);
+  //     fscanf(fp, "%d", &dut_ptr->io_cfi_in_id);
+  //     fscanf(fp, "%d", &dut_ptr->io_cfi_in_cmd);
+  //     fscanf(fp, "%lx", &dut_ptr->io_cfi_in_srcAddr);
+  //     fscanf(fp, "%lx", &dut_ptr->io_cfi_in_dstAddr);
       
-      fclose(fp);
+  //     fclose(fp);
 
-      if(re == 1) {
-        if((fp = fopen(cfi_resp_file[read_id-1], "w")) == NULL) {
-          printf("error open %s\n", cfi_resp_file[read_id-1]);
-          assert(0);
-        }
-        fclose(fp);
-      }
-      else if(dut_ptr->io_cfi_in_cmd == 3) {
-        if((fp = fopen(cfi_req_file[read_id-1], "w")) == NULL) {
-          printf("error open %s\n", cfi_req_file[read_id-1]);
-          assert(0);
-        }
-        fclose(fp);
-      }
+  //     if(re == 1) {
+  //       if((fp = fopen(cfi_resp_file[read_id-1], "w")) == NULL) {
+  //         printf("error open %s\n", cfi_resp_file[read_id-1]);
+  //         assert(0);
+  //       }
+  //       fclose(fp);
+  //     }
+  //     else if(dut_ptr->io_cfi_in_cmd == 3) {
+  //       if((fp = fopen(cfi_req_file[read_id-1], "w")) == NULL) {
+  //         printf("error open %s\n", cfi_req_file[read_id-1]);
+  //         assert(0);
+  //       }
+  //       fclose(fp);
+  //     }
 
-      return true;
-    }
-    else {
-      fclose(fp);
-      return false;
-    }
+  //     return true;
+  //   }
+  //   else {
+  //     fclose(fp);
+  //     return false;
+  //   }
 
-  }
+  // }
 
-  void cfi_check_file2() {
-    static uint8_t  last_valid;
-    static uint64_t last_cmd;
-
-    // output
-    if(dut_ptr->io_cfi_out_valid == 1 && (last_cmd != dut_ptr->io_cfi_out_cmd || last_valid == 0)) {
-      if(dut_ptr->io_cfi_out_id == id) {           // write req
-        cfi_write_file(dut_ptr->io_cfi_out_id, 0);
-      }
-      else {
-        cfi_write_file(dut_ptr->io_cfi_out_id, 1); // write resp
-      }
-    } 
-
-    // input
-    if(id == 1) {
-      if(cfi_read_file(id, 1) == false) {
-        if(cfi_read_file(2, 0) == false) {
-          if(cfi_read_file(3, 0) == false) {
-            dut_ptr->io_cfi_in_valid = 0;
-          }
-        }
-      }
-    }
-    else if(id == 2) {
-      if(cfi_read_file(id, 1) == false) {
-        if(cfi_read_file(1, 0) == false) {
-          if(cfi_read_file(3, 0) == false) {
-            dut_ptr->io_cfi_in_valid = 0;
-          }
-        }
-      }
-    }
-    else if(id == 3) {
-      if(cfi_read_file(id, 1) == false) {
-        if(cfi_read_file(1, 0) == false) {
-          if(cfi_read_file(2, 0) == false) {
-            dut_ptr->io_cfi_in_valid = 0;
-          }
-        }
-      }
-    }
-
-    last_valid = dut_ptr->io_cfi_out_valid;
-    last_cmd = dut_ptr->io_cfi_out_cmd;
-  }
-
-  // void cfi_check_file() {
-  //   FILE *fp1, *fp2, *fp3, *fp4, *fp5, *fp6;
-  //   const char cfi_1_req[30]  = "/home/wwy/cfi/cfi_1_req.txt";
-  //   const char cfi_1_resp[30] = "/home/wwy/cfi/cfi_1_resp.txt";
-  //   const char cfi_2_req[30]  = "/home/wwy/cfi/cfi_2_req.txt";
-  //   const char cfi_2_resp[30] = "/home/wwy/cfi/cfi_2_resp.txt";
-  //   const char cfi_3_req[30]  = "/home/wwy/cfi/cfi_3_req.txt";
-  //   const char cfi_3_resp[30] = "/home/wwy/cfi/cfi_3_resp.txt";
-
+  // void cfi_check_file2() {
   //   static uint8_t  last_valid;
   //   static uint64_t last_cmd;
 
-  //   if(id == 1) {
-  //     if(dut_ptr->io_cfi_out_valid == 1 && (last_cmd != dut_ptr->io_cfi_out_cmd || last_valid == 0)) {      
-  //       if(dut_ptr->io_cfi_out_id == id) {          // req
-  //         if ((fp1 = fopen(cfi_1_req, "w")) == NULL) {
-	// 	        printf("error open /home/wwy/cfi/cfi_1_req.txt!\n");
-	// 	        assert(0);
-	//         }
-  //         fprintf(fp1, "VALID\n");
-  //         fprintf(fp1, "%d\n", dut_ptr->io_cfi_out_valid);
-  //         fprintf(fp1, "%d\n", dut_ptr->io_cfi_out_id);
-  //         fprintf(fp1, "%d\n", dut_ptr->io_cfi_out_cmd);
-  //         fprintf(fp1, "%lx\n", dut_ptr->io_cfi_out_srcAddr);
-  //         fprintf(fp1, "%lx\n", dut_ptr->io_cfi_out_dstAddr);
-          
-  //         fclose(fp1);
-  //       }
-  //       else if(dut_ptr->io_cfi_out_id == 2) {     // resp to 2
-  //         if ((fp4 = fopen(cfi_2_resp, "w")) == NULL) {
-	// 	        printf("error open /home/wwy/cfi/cfi_2_resp.txt!\n");
-	// 	        assert(0);
-	//         }
-  //         fprintf(fp4, "VALID\n");
-  //         fprintf(fp4, "%d\n", dut_ptr->io_cfi_out_valid);
-  //         fprintf(fp4, "%d\n", dut_ptr->io_cfi_out_id);
-  //         fprintf(fp4, "%d\n", dut_ptr->io_cfi_out_cmd);
-  //         fprintf(fp4, "%lx\n", dut_ptr->io_cfi_out_srcAddr);
-  //         fprintf(fp4, "%lx\n", dut_ptr->io_cfi_out_dstAddr);
-          
-  //         fclose(fp4);
-  //       }
-  //       else if(dut_ptr->io_cfi_out_id == 3) {     // resp tp 3
-  //         if((fp6 = fopen(cfi_3_resp, "w")) == NULL) {
-  //           printf("error open /home/wwy/cfi/cfi_3_resp.txt!\n");
-  //           assert(0);
-  //         }
-  //         fprintf(fp6, "VALID\n");
-  //         fprintf(fp6, "%d\n", dut_ptr->io_cfi_out_valid);
-  //         fprintf(fp6, "%d\n", dut_ptr->io_cfi_out_id);
-  //         fprintf(fp6, "%d\n", dut_ptr->io_cfi_out_cmd);
-  //         fprintf(fp6, "%lx\n", dut_ptr->io_cfi_out_srcAddr);
-  //         fprintf(fp6, "%lx\n", dut_ptr->io_cfi_out_dstAddr);
-
-  //         fclose(fp6);
-  //       }
-  //     }
-  //     if ((fp2 = fopen(cfi_1_resp, "r")) == NULL) {
-	// 	    printf("error open /home/wwy/cfi/cfi_1_resp.txt!\n");
-	// 	    assert(0);
-	//     }
-  //     if ((fp3 = fopen(cfi_2_req, "r")) == NULL) {
-	// 	    printf("error open /home/wwy/cfi/cfi_2_req.txt!\n");
-	// 	    assert(0);
-	//     }
-  //     if ((fp5 = fopen(cfi_3_req, "r")) == NULL) {
-	// 	    printf("error open /home/wwy/cfi/cfi_3_req.txt!\n");
-	// 	    assert(0);
-	//     }
-  //     char valid_1_resp[10], valid_2_req[10], valid_3_req[10];
-  //     fscanf(fp2, "%s", valid_1_resp);
-  //     fscanf(fp3, "%s", valid_2_req);
-  //     fscanf(fp5, "%s", valid_3_req);
-  //     if(strcmp(valid_1_resp, "VALID") == 0) {    // if both valid, process resp
-  //       fscanf(fp2, "%d", &dut_ptr->io_cfi_in_valid);
-  //       fscanf(fp2, "%d", &dut_ptr->io_cfi_in_id);
-  //       fscanf(fp2, "%d", &dut_ptr->io_cfi_in_cmd);
-  //       fscanf(fp2, "%lx", &dut_ptr->io_cfi_in_srcAddr);
-  //       fscanf(fp2, "%lx", &dut_ptr->io_cfi_in_dstAddr);
-        
-  //       fclose(fp2);
-  //       fclose(fp3);
-  //       fclose(fp5);
-  //       if ((fp2 = fopen(cfi_1_resp, "w")) == NULL) {                     // clear
-	// 	      printf("error open /home/wwy/cfi/cfi_1_resp.txt!\n");
-	// 	      assert(0);
-	//       }
-  //       fclose(fp2);
-  //     }
-  //     else if(strcmp(valid_2_req, "VALID") == 0) {
-  //       fscanf(fp3, "%d", &dut_ptr->io_cfi_in_valid);
-  //       fscanf(fp3, "%d", &dut_ptr->io_cfi_in_id);
-  //       fscanf(fp3, "%d", &dut_ptr->io_cfi_in_cmd);
-  //       fscanf(fp3, "%lx", &dut_ptr->io_cfi_in_srcAddr);
-  //       fscanf(fp3, "%lx", &dut_ptr->io_cfi_in_dstAddr);
-        
-  //       fclose(fp2);
-  //       fclose(fp3);
-  //       fclose(fp5);
-  //       if(dut_ptr->io_cfi_in_cmd == 3) {
-  //         if ((fp3 = fopen(cfi_2_req, "w")) == NULL) {                     // clear
-	// 	        printf("error open /home/wwy/cfi/cfi_2_req.txt!\n");
-	// 	        assert(0);
-	//         }
-  //         fclose(fp3);
-  //       }
-  //     }
-  //     else if(strcmp(valid_3_req, "VALID") == 0) {
-  //       fscanf(fp5, "%d", &dut_ptr->io_cfi_in_valid);
-  //       fscanf(fp5, "%d", &dut_ptr->io_cfi_in_id);
-  //       fscanf(fp5, "%d", &dut_ptr->io_cfi_in_cmd);
-  //       fscanf(fp5, "%lx", &dut_ptr->io_cfi_in_srcAddr);
-  //       fscanf(fp5, "%lx", &dut_ptr->io_cfi_in_dstAddr);
-        
-  //       fclose(fp2);
-  //       fclose(fp3);
-  //       fclose(fp5);
-  //       if(dut_ptr->io_cfi_in_cmd == 3) {
-  //         if ((fp5 = fopen(cfi_3_req, "w")) == NULL) {                     // clear
-	// 	        printf("error open /home/wwy/cfi/cfi_3_req.txt!\n");
-	// 	        assert(0);
-	//         }
-  //         fclose(fp5);
-  //       }
+  //   // output
+  //   if(dut_ptr->io_cfi_out_valid == 1 && (last_cmd != dut_ptr->io_cfi_out_cmd || last_valid == 0)) {
+  //     if(dut_ptr->io_cfi_out_id == id) {           // write req
+  //       cfi_write_file(dut_ptr->io_cfi_out_id, 0);
   //     }
   //     else {
-  //       dut_ptr->io_cfi_in_valid = 0;
-  //       fclose(fp2);
-  //       fclose(fp3);
-  //       fclose(fp5);
+  //       cfi_write_file(dut_ptr->io_cfi_out_id, 1); // write resp
+  //     }
+  //   } 
+
+  //   // input
+  //   if(id == 1) {
+  //     if(cfi_read_file(id, 1) == false) {
+  //       if(cfi_read_file(2, 0) == false) {
+  //         if(cfi_read_file(3, 0) == false) {
+  //           dut_ptr->io_cfi_in_valid = 0;
+  //         }
+  //       }
   //     }
   //   }
   //   else if(id == 2) {
-  //     if(dut_ptr->io_cfi_out_valid == 1 && (last_cmd != dut_ptr->io_cfi_out_cmd || last_valid == 0)) {      
-  //       if(dut_ptr->io_cfi_out_id == id) {                     // req
-  //         if ((fp3 = fopen(cfi_2_req, "w")) == NULL) {
-	// 	        printf("error open /home/wwy/cfi/cfi_2_req.txt!\n");
-	// 	        assert(0);
-	//         }
-  //         fprintf(fp3, "VALID\n");
-  //         fprintf(fp3, "%d\n", dut_ptr->io_cfi_out_valid);
-  //         fprintf(fp3, "%d\n", dut_ptr->io_cfi_out_id);
-  //         fprintf(fp3, "%d\n", dut_ptr->io_cfi_out_cmd);
-  //         fprintf(fp3, "%lx\n", dut_ptr->io_cfi_out_srcAddr);
-  //         fprintf(fp3, "%lx\n", dut_ptr->io_cfi_out_dstAddr);
-          
-  //         fclose(fp3);
-  //       }
-  //       else if(dut_ptr->io_cfi_out_id == 1) {     // resp to 1
-  //         if ((fp2 = fopen(cfi_1_resp, "w")) == NULL) {
-	// 	        printf("error open /home/wwy/cfi/cfi_1_resp.txt!\n");
-	// 	        assert(0);
-	//         }
-  //         fprintf(fp2, "VALID\n");
-  //         fprintf(fp2, "%d\n", dut_ptr->io_cfi_out_valid);
-  //         fprintf(fp2, "%d\n", dut_ptr->io_cfi_out_id);
-  //         fprintf(fp2, "%d\n", dut_ptr->io_cfi_out_cmd);
-  //         fprintf(fp2, "%lx\n", dut_ptr->io_cfi_out_srcAddr);
-  //         fprintf(fp2, "%lx\n", dut_ptr->io_cfi_out_dstAddr);
-          
-  //         fclose(fp2);
-  //       }
-  //       else if(dut_ptr->io_cfi_out_id == 3) {     // resp tp 3
-  //         if((fp6 = fopen(cfi_3_resp, "w")) == NULL) {
-  //           printf("error open /home/wwy/cfi/cfi_3_resp.txt!\n");
-  //           assert(0);
+  //     if(cfi_read_file(id, 1) == false) {
+  //       if(cfi_read_file(1, 0) == false) {
+  //         if(cfi_read_file(3, 0) == false) {
+  //           dut_ptr->io_cfi_in_valid = 0;
   //         }
-  //         fprintf(fp6, "VALID\n");
-  //         fprintf(fp6, "%d\n", dut_ptr->io_cfi_out_valid);
-  //         fprintf(fp6, "%d\n", dut_ptr->io_cfi_out_id);
-  //         fprintf(fp6, "%d\n", dut_ptr->io_cfi_out_cmd);
-  //         fprintf(fp6, "%lx\n", dut_ptr->io_cfi_out_srcAddr);
-  //         fprintf(fp6, "%lx\n", dut_ptr->io_cfi_out_dstAddr);
-
-  //         fclose(fp6);
   //       }
-  //     }
-  //     if ((fp4 = fopen(cfi_2_resp, "r")) == NULL) {
-	// 	    printf("error open /home/wwy/cfi/cfi_2_resp.txt!\n");
-	// 	    assert(0);
-	//     }
-  //     if ((fp1 = fopen(cfi_1_req, "r")) == NULL) {
-	// 	    printf("error open /home/wwy/cfi/cfi_1_req.txt!\n");
-	// 	    assert(0);
-	//     }
-  //     if ((fp5 = fopen(cfi_3_req, "r")) == NULL) {
-	// 	    printf("error open /home/wwy/cfi/cfi_3_req.txt!\n");
-	// 	    assert(0);
-	//     }
-  //     char valid_2_resp[10], valid_1_req[10], valid_3_req[10];
-  //     fscanf(fp4, "%s", valid_2_resp);
-  //     fscanf(fp1, "%s", valid_1_req);
-  //     fscanf(fp5, "%s", valid_3_req);
-  //     if(strcmp(valid_2_resp, "VALID") == 0) {    // if both valid, process resp
-  //       fscanf(fp4, "%d", &dut_ptr->io_cfi_in_valid);
-  //       fscanf(fp4, "%d", &dut_ptr->io_cfi_in_id);
-  //       fscanf(fp4, "%d", &dut_ptr->io_cfi_in_cmd);
-  //       fscanf(fp4, "%lx", &dut_ptr->io_cfi_in_srcAddr);
-  //       fscanf(fp4, "%lx", &dut_ptr->io_cfi_in_dstAddr);
-        
-  //       fclose(fp4);
-  //       fclose(fp1);
-  //       fclose(fp5);
-  //       if ((fp4 = fopen(cfi_2_resp, "w")) == NULL) {                     // clear
-	// 	      printf("error open /home/wwy/cfi/cfi_2_resp.txt!\n");
-	// 	      assert(0);
-	//       }
-  //       fclose(fp4);
-  //     }
-  //     else if(strcmp(valid_1_req, "VALID") == 0) {
-  //       fscanf(fp1, "%d", &dut_ptr->io_cfi_in_valid);
-  //       fscanf(fp1, "%d", &dut_ptr->io_cfi_in_id);
-  //       fscanf(fp1, "%d", &dut_ptr->io_cfi_in_cmd);
-  //       fscanf(fp1, "%lx", &dut_ptr->io_cfi_in_srcAddr);
-  //       fscanf(fp1, "%lx", &dut_ptr->io_cfi_in_dstAddr);
-        
-  //       fclose(fp4);
-  //       fclose(fp1);
-  //       fclose(fp5);
-  //       if(dut_ptr->io_cfi_in_cmd == 3) {
-  //         if ((fp1 = fopen(cfi_1_req, "w")) == NULL) {                     // clear
-	// 	        printf("error open /home/wwy/cfi/cfi_1_req.txt!\n");
-	// 	        assert(0);
-	//         }
-  //         fclose(fp1);
-  //       }
-  //     }
-  //     else if(strcmp(valid_3_req, "VALID") == 0) {
-  //       fscanf(fp5, "%d", &dut_ptr->io_cfi_in_valid);
-  //       fscanf(fp5, "%d", &dut_ptr->io_cfi_in_id);
-  //       fscanf(fp5, "%d", &dut_ptr->io_cfi_in_cmd);
-  //       fscanf(fp5, "%lx", &dut_ptr->io_cfi_in_srcAddr);
-  //       fscanf(fp5, "%lx", &dut_ptr->io_cfi_in_dstAddr);
-        
-  //       fclose(fp4);
-  //       fclose(fp1);
-  //       fclose(fp5);
-  //       if(dut_ptr->io_cfi_in_cmd == 3) {
-  //         if ((fp5 = fopen(cfi_3_req, "w")) == NULL) {                     // clear
-	// 	        printf("error open /home/wwy/cfi/cfi_3_req.txt!\n");
-	// 	        assert(0);
-	//         }
-  //         fclose(fp5);
-  //       }
-  //     }
-  //     else {
-  //       dut_ptr->io_cfi_in_valid = 0;
-  //       fclose(fp4);
-  //       fclose(fp1);
-  //       fclose(fp5);
   //     }
   //   }
   //   else if(id == 3) {
-  //     if(dut_ptr->io_cfi_out_valid == 1 && (last_cmd != dut_ptr->io_cfi_out_cmd || last_valid == 0)) {      
-  //       if(dut_ptr->io_cfi_out_id == id) {                     // req
-  //         if ((fp5 = fopen(cfi_3_req, "w")) == NULL) {
-	// 	        printf("error open /home/wwy/cfi/cfi_3_req.txt!\n");
-	// 	        assert(0);
-	//         }
-  //         fprintf(fp5, "VALID\n");
-  //         fprintf(fp5, "%d\n", dut_ptr->io_cfi_out_valid);
-  //         fprintf(fp5, "%d\n", dut_ptr->io_cfi_out_id);
-  //         fprintf(fp5, "%d\n", dut_ptr->io_cfi_out_cmd);
-  //         fprintf(fp5, "%lx\n", dut_ptr->io_cfi_out_srcAddr);
-  //         fprintf(fp5, "%lx\n", dut_ptr->io_cfi_out_dstAddr);
-          
-  //         fclose(fp5);
-  //       }
-  //       else if(dut_ptr->io_cfi_out_id == 1) {     // resp to 1
-  //         if ((fp2 = fopen(cfi_1_resp, "w")) == NULL) {
-	// 	        printf("error open /home/wwy/cfi/cfi_1_resp.txt!\n");
-	// 	        assert(0);
-	//         }
-  //         fprintf(fp2, "VALID\n");
-  //         fprintf(fp2, "%d\n", dut_ptr->io_cfi_out_valid);
-  //         fprintf(fp2, "%d\n", dut_ptr->io_cfi_out_id);
-  //         fprintf(fp2, "%d\n", dut_ptr->io_cfi_out_cmd);
-  //         fprintf(fp2, "%lx\n", dut_ptr->io_cfi_out_srcAddr);
-  //         fprintf(fp2, "%lx\n", dut_ptr->io_cfi_out_dstAddr);
-          
-  //         fclose(fp2);
-  //       }
-  //       else if(dut_ptr->io_cfi_out_id == 2) {     // resp tp 2
-  //         if((fp4 = fopen(cfi_2_resp, "w")) == NULL) {
-  //           printf("error open /home/wwy/cfi/cfi_2_resp.txt!\n");
-  //           assert(0);
+  //     if(cfi_read_file(id, 1) == false) {
+  //       if(cfi_read_file(1, 0) == false) {
+  //         if(cfi_read_file(2, 0) == false) {
+  //           dut_ptr->io_cfi_in_valid = 0;
   //         }
-  //         fprintf(fp4, "VALID\n");
-  //         fprintf(fp4, "%d\n", dut_ptr->io_cfi_out_valid);
-  //         fprintf(fp4, "%d\n", dut_ptr->io_cfi_out_id);
-  //         fprintf(fp4, "%d\n", dut_ptr->io_cfi_out_cmd);
-  //         fprintf(fp4, "%lx\n", dut_ptr->io_cfi_out_srcAddr);
-  //         fprintf(fp4, "%lx\n", dut_ptr->io_cfi_out_dstAddr);
-
-  //         fclose(fp4);
   //       }
-  //     }
-  //     if ((fp6 = fopen(cfi_3_resp, "r")) == NULL) {
-	// 	    printf("error open /home/wwy/cfi/cfi_3_resp.txt!\n");
-	// 	    assert(0);
-	//     }
-  //     if ((fp1 = fopen(cfi_1_req, "r")) == NULL) {
-	// 	    printf("error open /home/wwy/cfi/cfi_1_req.txt!\n");
-	// 	    assert(0);
-	//     }
-  //     if ((fp3 = fopen(cfi_2_req, "r")) == NULL) {
-	// 	    printf("error open /home/wwy/cfi/cfi_2_req.txt!\n");
-	// 	    assert(0);
-	//     }
-  //     char valid_3_resp[10], valid_1_req[10], valid_2_req[10];
-  //     fscanf(fp6, "%s", valid_3_resp);
-  //     fscanf(fp1, "%s", valid_1_req);
-  //     fscanf(fp3, "%s", valid_2_req);
-  //     if(strcmp(valid_3_resp, "VALID") == 0) {    // if both valid, process resp
-  //       fscanf(fp6, "%d", &dut_ptr->io_cfi_in_valid);
-  //       fscanf(fp6, "%d", &dut_ptr->io_cfi_in_id);
-  //       fscanf(fp6, "%d", &dut_ptr->io_cfi_in_cmd);
-  //       fscanf(fp6, "%lx", &dut_ptr->io_cfi_in_srcAddr);
-  //       fscanf(fp6, "%lx", &dut_ptr->io_cfi_in_dstAddr);
-        
-  //       fclose(fp6);
-  //       fclose(fp1);
-  //       fclose(fp3);
-  //       if ((fp6 = fopen(cfi_3_resp, "w")) == NULL) {                     // clear
-	// 	      printf("error open /home/wwy/cfi/cfi_3_resp.txt!\n");
-	// 	      assert(0);
-	//       }
-  //       fclose(fp6);
-  //     }
-  //     else if(strcmp(valid_1_req, "VALID") == 0) {
-  //       fscanf(fp1, "%d", &dut_ptr->io_cfi_in_valid);
-  //       fscanf(fp1, "%d", &dut_ptr->io_cfi_in_id);
-  //       fscanf(fp1, "%d", &dut_ptr->io_cfi_in_cmd);
-  //       fscanf(fp1, "%lx", &dut_ptr->io_cfi_in_srcAddr);
-  //       fscanf(fp1, "%lx", &dut_ptr->io_cfi_in_dstAddr);
-        
-  //       fclose(fp6);
-  //       fclose(fp1);
-  //       fclose(fp3);
-  //       if(dut_ptr->io_cfi_in_cmd == 3) {
-  //         if ((fp1 = fopen(cfi_1_req, "w")) == NULL) {                     // clear
-	// 	        printf("error open /home/wwy/cfi/cfi_1_req.txt!\n");
-	// 	        assert(0);
-	//         }
-  //         fclose(fp1);
-  //       }
-  //     }
-  //     else if(strcmp(valid_2_req, "VALID") == 0) {
-  //       fscanf(fp3, "%d", &dut_ptr->io_cfi_in_valid);
-  //       fscanf(fp3, "%d", &dut_ptr->io_cfi_in_id);
-  //       fscanf(fp3, "%d", &dut_ptr->io_cfi_in_cmd);
-  //       fscanf(fp3, "%lx", &dut_ptr->io_cfi_in_srcAddr);
-  //       fscanf(fp3, "%lx", &dut_ptr->io_cfi_in_dstAddr);
-        
-  //       fclose(fp6);
-  //       fclose(fp1);
-  //       fclose(fp3);
-  //       if(dut_ptr->io_cfi_in_cmd == 3) {
-  //         if ((fp3 = fopen(cfi_3_req, "w")) == NULL) {                     // clear
-	// 	        printf("error open /home/wwy/cfi/cfi_2_req.txt!\n");
-	// 	        assert(0);
-	//         }
-  //         fclose(fp3);
-  //       }
-  //     }
-  //     else {
-  //       dut_ptr->io_cfi_in_valid = 0;
-  //       fclose(fp6);
-  //       fclose(fp1);
-  //       fclose(fp3);
   //     }
   //   }
-    
+
   //   last_valid = dut_ptr->io_cfi_out_valid;
   //   last_cmd = dut_ptr->io_cfi_out_cmd;
   // }
 
   void single_cycle() {
-    if(dut_ptr->io_difftest_thisPC > 0x80000010) {
-      cfi_check_file2();
-    }
+    // if(dut_ptr->io_difftest_thisPC > 0x80000010) {
+    //   cfi_check_file2();
+    // }
     // cfi_check();
     dut_ptr->clock = 0;
     dut_ptr->eval();
 
     dut_ptr->clock = 1;
     dut_ptr->eval();
-    if(dut_ptr->io_cfi_in_cmd == 2) {          // stop the machine
-      dut_ptr->reset = 1;
-    }
+    // if(dut_ptr->io_cfi_in_cmd == 2) {          // stop the machine
+    //   dut_ptr->reset = 1;
+    // }
 
 #if VM_TRACE
     tfp->dump(cycles);

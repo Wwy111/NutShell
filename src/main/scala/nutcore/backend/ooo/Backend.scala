@@ -16,6 +16,7 @@
 
 package nutcore
 
+import bus.cfi.{Cfi2UartConverter, UartRxPathIO, UartTxPathIO}
 import chisel3._
 import chisel3.util._
 import chisel3.util.experimental.BoringUtils
@@ -672,14 +673,18 @@ class Backend_inorder(implicit val p: NutCoreConfig) extends NutCoreModule {
 
     val redirect = new RedirectIO
 
-    val cfi = new CFIIoTIO
+//    val cfi = new CFIIoTIO
+    val tx = new UartTxPathIO
+    val rx = new UartRxPathIO
   })
 
   val isu  = Module(new ISU)
   val exu  = Module(new EXU)
   val wbu  = Module(new WBU)
 
-  io.cfi <> wbu.io.cfi
+//  io.cfi <> wbu.io.cfi
+  io.tx <> wbu.io.tx
+  wbu.io.rx <> io.rx
 
   PipelineConnect(isu.io.out, exu.io.in, exu.io.out.fire(), io.flush(0))
   PipelineConnect(exu.io.out, wbu.io.in, true.B, io.flush(1))

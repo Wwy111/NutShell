@@ -19,6 +19,7 @@ package system
 import nutcore._
 import bus.axi4.{AXI4, AXI4Lite}
 import bus.simplebus._
+import bus.cfi._
 import device._
 import top.Settings
 
@@ -49,7 +50,9 @@ class NutShell(implicit val p: NutCoreConfig) extends Module with HasSoCParamete
     val meip = Input(UInt(Settings.getInt("NrExtIntr").W))
     val ila = if (p.FPGAPlatform && EnableILA) Some(Output(new ILABundle)) else None
 
-    val cfi = new CFIIoTIO
+//    val cfi = new CFIIoTIO
+    val tx = new UartTxPathIO
+    val rx = new UartRxPathIO
   })
 
   val nutcore = Module(new NutCore)
@@ -144,7 +147,9 @@ class NutShell(implicit val p: NutCoreConfig) extends Module with HasSoCParamete
     BoringUtilsConnect(ila.InstrCnt   ,"ilaInstrCnt")
   }
 
-  io.cfi <> nutcore.io.cfi
+//  io.cfi <> nutcore.io.cfi
+  io.tx <> nutcore.io.tx
+  nutcore.io.rx <> io.rx
 //  val cfi = Module(new CFI)
 //  val cfiReq = WireInit(0.U.asTypeOf(new BPUUpdateReq))
 //  BoringUtils.addSink(cfiReq, "bpuUpdateReq")
